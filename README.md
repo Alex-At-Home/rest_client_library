@@ -26,7 +26,7 @@ Let's say you have a fairly standard REST service:
 
 Then you would declare this API using `scala_rest_driver` as follows:
 
-```
+```scala
 object ApiModel {
   import org.elastic.rest.scala.RestBase._
   import org.elastic.rest.scala.RestResources._
@@ -54,7 +54,7 @@ object ApiModel {
 
 And that's it! See below (TODO_LINK) for more details on the API. Then you can use it as follows:
 
-```
+```scala
   import ApiModel
   
   val implicit driver = ??? // see below
@@ -76,7 +76,7 @@ For returning the REST response in JSON directly, import all the classes in the 
 
 eg:
 
-```
+```scala
 import org.elastic.rest.scala.driver.json.CirceJsonModule._
 TODO examples
 ```
@@ -96,7 +96,7 @@ The typed variants require that a JSON module (see below TODO_LINK) is imported 
 
 So extending the example above:
 
-```
+```scala
 object DataModel {
   case class DatabaseRecord(name: String, age: Option[Int])
 }
@@ -113,7 +113,7 @@ object ApiModel {
 
 And then:
 
-```
+```scala
 import org.elastic.rest.scala.json.CirceTypeModule._
 
 val newRecord = DatabaseRecord("Alex", Some(21))
