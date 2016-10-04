@@ -26,6 +26,8 @@ object CirceModuleTests extends TestSuite {
             Future.successful("""{ "test": "written" }""")
         case BaseDriverOp(TestApi.`/`(), RestBase.GET, _, List(), List()) =>
           Future.successful("""{ "test": "get" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
       }
       implicit val mockDriver = new MockRestDriver(handler)
 
@@ -43,6 +45,8 @@ object CirceModuleTests extends TestSuite {
             Future.successful("""{ "test": "written" }""")
         case BaseDriverOp(TestApi.`/typed`(), RestBase.GET, _, List(), List()) =>
           Future.successful("""{ "testRead": "get" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
       }
       implicit val mockDriver = new MockRestDriver(handler)
 
@@ -61,6 +65,8 @@ object CirceModuleTests extends TestSuite {
             Future.successful("""{ "test": "written" }""")
         case BaseDriverOp(TestApi.`/data_model`(), RestBase.GET, _, List(), List()) =>
           Future.successful("""{ "testRead": "get" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
       }
       implicit val mockDriver = new MockRestDriver(handler)
 
@@ -77,6 +83,8 @@ object CirceModuleTests extends TestSuite {
           Future.successful("""{ "test": "written" }""")
         case BaseDriverOp(TestApi.`/custom_typed`(), RestBase.GET, _, List(), List()) =>
           Future.successful("""{ "testRead": "get" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
       }
       implicit val mockDriver = new MockRestDriver(handler)
 
