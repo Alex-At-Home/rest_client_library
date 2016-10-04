@@ -1,4 +1,4 @@
-# Scala REST driver
+# Scala REST driver   [![Build Status](https://travis-ci.org/Alex-At-Home/rest_client_library.svg?branch=master)](https://travis-ci.org/Alex-At-Home/rest_client_library)
 
 ## Overview
 
