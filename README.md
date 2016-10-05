@@ -55,10 +55,10 @@ object ApiModel {
 And that's it! See below (TODO_LINK) for more details on the API. Then you can use it as follows:
 
 ```scala
-  import ApiModel
+  import ApiModel._
   
   val implicit driver = ??? // see below
-  val createRequest = `/database/users`.send(""" { "name": "Alex" } """)
+  val createRequest = `/database/users`().send(""" { "name": "Alex" } """)
   val createReply: Future[String] = createRequest.execS() //or execJ to get JSON, see below
   // {"name":"Alex"}
   val getRequest = `/database/users/$userId`("Alex").pretty(true)
