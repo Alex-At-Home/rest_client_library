@@ -197,9 +197,8 @@ object RestBase {
 
   /**
     * The base type for the different REST drivers, eg:
-    * - Mock
-    * - JVM version, based on native ES driver
-    * - JS version, based on TODO
+    * - Client specific JVM version, eg based on native ES driver
+    * - Generic JVM/JS version, eg based on RosHTTP
     */
   trait RestDriver {
     /** Executes the designated operation asynchronously
@@ -347,70 +346,5 @@ object RestBase {
       * by substituting in the field names
       */
     lazy val location = locationImpl
-  }
-
-  ///////////////////////////////////////////////////////////////////
-
-  //TODO remove everything under here once refactor is complete
-
-  /** The base readable type
-    *
-    * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
-    */
-  trait EsReadable[D <: BaseDriverOp] {
-    /** Creates a driver operation
-      *
-      * @return The driver opertion
-      */
-    def read(): D
-  }
-
-  /** The base readable type where the reply is controlled by data written to the resource
-    *
-    * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
-    */
-  trait WithDataEsReadable[D <: BaseDriverOp] {
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver opertion
-      */
-    def read(body: String): D
-  }
-
-  /** The base writable type
-    *
-    * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
-    */
-  trait EsWritable[D <: BaseDriverOp] {
-
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver opertion
-      */
-    def write(body: String): D
-  }
-
-  /** The base deletable type
-    *
-    * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
-    */
-  trait EsDeletable[D <: BaseDriverOp] {
-
-    def delete(): D
-  }
-
-  /** The base deletable type where the delete is controlled by data written to the resource
-    *
-    * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
-    */
-  trait WithDataEsDeletable[D <: BaseDriverOp] {
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver opertion
-      */
-    def delete(body: String): D
   }
 }
