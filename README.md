@@ -8,7 +8,7 @@ This is a small library designed to make it easy to build clients/drivers for (J
    * (`*`) This currently comes with some caveats, see below under TODO_LINK
 * Versionable
 * "Bring-your-own-HTTP-client"
-* Runs in JVM Scala or scalajs
+* _(Currently does not run in ScalaJS, though that is a longer term goal)_
 
 Note that the underlying idea is that these clients map very tightly to the REST endpoints exposed by the target service. This has two implications:
 * To understand a service, you only need to understand the REST interface (vs both the REST interface and the scala/java/whatever API)
@@ -60,10 +60,13 @@ And that's it! See below (TODO_LINK) for more details on the API. Then you can u
   val implicit driver = ??? // see below
   val createRequest = `/database/users`().send(""" { "name": "Alex" } """)
   val createReply: Future[String] = createRequest.execS() //or execJ to get JSON, see below
-  // {"name":"Alex"}
+  // eventually """{"name":"Alex"}"""
+  // Blocking version (mostly for testing)
+  `/database/users`().send(""" { "name": "Alex" } """).resultS()
+  // Try[String] = Success("""{"name":"Alex"}""")
   val getRequest = `/database/users/$userId`("Alex").pretty(true)
   val getReply: Future[String] = createReply.flatMap(_ => getRequest.execS()) // (or execJ)
-  // {\n\t"name": "Alex"\n}
+  // eventually """{\n\t"name": "Alex"\n}"""
 ```
 
 ## JSON
@@ -71,14 +74,19 @@ And that's it! See below (TODO_LINK) for more details on the API. Then you can u
 The REST driver supports any JSON library, with a simple connector (see below). Support for CIRCE (TODO_LINK) is provided. 
 
 For returning the REST response in JSON directly, import all the classes in the desired JSON connector (eg `import org.elastic.rest.scala.driver.json.CirceJsonModule._`), and then:
-* call the implicit `execJ` on the `BaseDriverOp` that is returned from the `read()`/`write(...)`/`send(...)`/`delete()`/etc calls to return a `Future[J]` where `J` is eg `JObject` in CIRCE (TODO_LINK), TODO other examples
-* When sending data (eg in `write()` or `send()` calls, simply pass an object of type `J` (eg TODO) instead of a String.
+* call the implicit `execJ` on the `BaseDriverOp` that is returned from the `read()`/`write(...)`/`send(...)`/`delete()`/etc calls to return a `Future[J]` where `J` is eg `Json` in [CIRCE](https://github.com/travisbrown/circe), TODO other examples
+* When sending data (eg in `write()` or `send()` calls, simply pass an object of type `J` (eg TODO) instead of a String. (Or use `resultS`/`resultJ` to get the result via a single blocking call).
 
 eg:
 
 ```scala
 import org.elastic.rest.scala.driver.json.CirceJsonModule._
-TODO examples
+import io.circe._, io.circe.parser._
+
+val jsonIn: Json = parse(""" { "name": "Alex" } """).getOrElse(Json.Null)
+val tryJsonOut: Try[Json] = `/database/users`().send(json).resultJ()
+// Success({ "name": "Alex" })
+
 ```
 
 _(Of course the default string input/output can be used together with a JSON library with no connector with your own implicits etc)_
@@ -92,13 +100,15 @@ It is possible to declare any of the REST resources as optionally typed in eithe
    * `TU` with one extra type parameter, for typed input and untyped output, eg `WritableTU[M, I]`, with the extra method  `write(I)` that returns a future String/JSON object via `execJ()`/`execS()`
    * `UT` withone extra type parameter, for untyped input and typed output, eg `SendableUT[M, O]`, where `write(String)` and `write[J](J)` can in addition return a future `O` via `exec()`
 
-The typed variants require that a JSON module (see below TODO_LINK) is imported for its implicts
+The typed variants require that a JSON module (see below TODO_LINK) is imported for its implicits
 
 So extending the example above:
 
 ```scala
+import io.circe.generic.JsonCodec
+
 object DataModel {
-  case class DatabaseRecord(name: String, age: Option[Int])
+  @JsonCodec case class DatabaseRecord(name: String, age: Option[Int])
 }
 object ApiModel {
 //...
