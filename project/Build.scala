@@ -57,7 +57,7 @@ object MyBuild extends Build {
     settings = buildSettings ++ Seq(
       name := "REST Scala Core",
       version := restScalaDriverVersion,
-      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/rest_scala_core/")),
+      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
       autoAPIMappings := true,
       libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
       libraryDependencies += utestJvmDeps,
@@ -71,11 +71,25 @@ object MyBuild extends Build {
     settings = buildSettings ++ Seq(
       name := "REST JSON - CIRCE module",
       version := restScalaDriverVersion,
-      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/rest_json_circe_module/")),
+      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
       autoAPIMappings := true,
       libraryDependencies += utestJvmDeps,
       libraryDependencies ++= circeDeps,
       testFrameworks += new TestFramework("utest.runner.Framework")
     )
   ).dependsOn(rest_scala_core)
+
+  // Doc project
+  // (from https://groups.google.com/forum/#!topic/simple-build-tool/QXFsjLozLyU)
+  def mainDirs(project: Project) = unmanagedSourceDirectories in project in Compile
+  lazy val doc = Project("doc", file("doc"))
+    .dependsOn(rest_scala_core, rest_json_circe_module)
+    .settings(buildSettings ++ Seq(
+        version := restScalaDriverVersion,
+        unmanagedSourceDirectories in Compile <<= Seq(
+          mainDirs(rest_scala_core),
+          mainDirs(rest_json_circe_module)
+        ).join.apply {(s) => s.flatten}
+      )
+    )
 }

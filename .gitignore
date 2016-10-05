@@ -1,12 +1,10 @@
 
 /target/
-/elasticsearch_scala_core/target/
-/elasticsearch_scala_java_client/target/
-/elasticsearch_scala_shell/target/
 /.idea/
 /project/target/
 /project/project/
 /rest_json_circe_module/target/
 /rest_scala_core/target/
 /rest_scala_js_client/target/
+/doc/target/
 /.history
