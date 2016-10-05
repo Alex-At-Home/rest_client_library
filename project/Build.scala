@@ -42,11 +42,14 @@ object MyBuild extends Build {
     file("."),
     settings = buildSettings
   )
-    .aggregate(
-      rest_scala_core,
-      rest_json_circe_module,
-      rest_scala_js_client
-    )
+  .aggregate(
+    rest_scala_core,
+    rest_json_circe_module
+  )
+
+  val githubName = "rest_client_library"
+  val apiRoot = "https://alex-at-home.github.io"
+  val docVersion = "current"
 
   lazy val rest_scala_core: Project = Project(
     "rest_scala_core",
@@ -54,6 +57,8 @@ object MyBuild extends Build {
     settings = buildSettings ++ Seq(
       name := "REST Scala Core",
       version := restScalaDriverVersion,
+      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/rest_scala_core/")),
+      autoAPIMappings := true,
       libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
       libraryDependencies += utestJvmDeps,
       testFrameworks += new TestFramework("utest.runner.Framework")
@@ -66,19 +71,11 @@ object MyBuild extends Build {
     settings = buildSettings ++ Seq(
       name := "REST JSON - CIRCE module",
       version := restScalaDriverVersion,
+      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/rest_json_circe_module/")),
+      autoAPIMappings := true,
       libraryDependencies += utestJvmDeps,
       libraryDependencies ++= circeDeps,
       testFrameworks += new TestFramework("utest.runner.Framework")
     )
   ).dependsOn(rest_scala_core)
-
-  lazy val rest_scala_js_client: Project = Project(
-    "rest_scala_js_client",
-    file("rest_scala_js_client"),
-    settings = buildSettings ++ Seq(
-      name := "REST Scala JS Client",
-      version := restScalaDriverVersion
-    )
-  ).dependsOn(rest_scala_core)
-
 }
