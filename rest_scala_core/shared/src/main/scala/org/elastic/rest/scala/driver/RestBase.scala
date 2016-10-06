@@ -1,9 +1,12 @@
 package org.elastic.rest.scala.driver
 
+import org.elastic.rest.scala.driver.utils.MacroUtils
+
+import scala.annotation.StaticAnnotation
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.reflect.runtime.universe._
+import scala.concurrent.{Await, Future}
 import scala.util.Try
+import scala.language.experimental.macros
 
 /**
   * The base operations for the Elasticsearch DSL
@@ -23,51 +26,6 @@ object RestBase {
     * @param message A message summarizing the error (may be empty if no summary can be inferred)
     */
   case class RestRequestException(message: String) extends Exception(message)
-
-  /** A trait of `BaseDriverOp` that indicates the typed return type of an operation
-    *
-    * @tparam T The type of the operation return
-    */
-  trait TypedOperation[T] { self: BaseDriverOp =>
-
-    /**
-      * Evidence for the type of the operation
-      */
-    protected implicit val ct: WeakTypeTag[T]
-
-    /** Actually executes the operation (aysnc)
-      *
-      * @param stringToTypedHelper An implicit helper to convert the op return to a type
-      * @param driver The driver which executes the operation
-      * @param ec The execution context for futures
-      * @return A future containing the result of the operation as a type
-      */
-    def exec
-      ()
-      (implicit stringToTypedHelper: StringToTypedHelper,
-       driver: RestDriver,
-       ec: ExecutionContext
-      )
-      : Future[T] =
-        self.execS().map(stringToTypedHelper.toType(_)(ct))
-
-    /** Actually executes the operation (sync)
-      *
-      * @param timeout Optionally, the amount of time to wait before failing
-      * @param stringToTypedHelper An implicit helper to convert the op return to a type
-      * @param driver The driver which executes the operation
-      * @param ec The execution context for futures
-      * @return The result of the operation as a type
-      */
-    def result
-      (timeout: Duration = null)
-      (implicit stringToTypedHelper: StringToTypedHelper,
-       driver: RestDriver,
-       ec: ExecutionContext)
-    : Try[T] =
-      Try { Await.result(this.exec(), Option(timeout).getOrElse(driver.timeout)) }
-
-  }
 
   /** Case classes that want a custom overwrite should inherit this trait and implement
     * `fromTyped`, bypasses needing a JSON library with an overridden serializer etc etc
@@ -91,39 +49,6 @@ object RestBase {
     *  Type handlers (like `CirceTypeModule`) should use `NoJsonHelpers.createCustomTyped(s)`
     */
   trait CustomStringToTyped
-
-  /** A trait to be implemented and used as an implicit to define how to go from a typed object
-    * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
-    * To handle `CustomTypedToString`, `fromTyped` should check for `T` being an instance of that
-    * and handle it separately
-    */
-  trait TypedToStringHelper {
-    /** Helper to convert from a typed (Case class) object to a string, see above
-      * remarks about handling `T` that is inherited from `CustomTypedToString`
-      *
-      * @param t Typed object
-      * @tparam T The type
-      * @return The JSON string representing `t`
-      */
-    def fromTyped[T](t: T)(implicit ct: WeakTypeTag[T]): String
-  }
-
-  /** A trait to be implemented and used as an implicit to indicate how to go from a
-    * JSON string (ie a return from an operation) to a typed (case class) object
-    * Note that the overridden `toType` should check `ct.tpe <:< CustomStringToTyped` and
-    * simply return `x.asInstanceOf[CustomStringToTyped].toType(s)` in such cases
-    */
-  trait StringToTypedHelper {
-
-    /** Helper to convert from a JSON string to a typed (case class) object
-      *
-      * @param s String return
-      * @param ct The type tag associated with the type
-      * @tparam T The desired type of the return operation
-      * @return An object of type `T`
-      */
-    def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T
-  }
 
   /** A trait to be implemented and used as an implicit to define how to go from JSON to string
     * (defaults to `j.toString`)
@@ -164,23 +89,27 @@ object RestBase {
       Try { Await.result(this.execJ(), Option(timeout).getOrElse(driver.timeout)) }
   }
 
-  /**
-    * Parent type for Modifiers to resources (representing URL parameters)
+  /** An annotation type that provides an implementation for the parameters that the modifier
+    * injects into the REST resource
     */
-  trait Modifier {
-    /**
-      * Creates the key=val to append to the URL
-      *
-      * @param mod The value of the modifier
-      * @return A string in the format "$key=$val"
-      */
-    def getModifier(mod: Any): (String, Any) = {
-      val methodName = Thread.currentThread().getStackTrace.apply(3).getMethodName
-      (methodName, mod)
-    }
+  class Param() extends StaticAnnotation {
+    def macroTransform(annottees: Any*) = macro MacroUtils.modifierImpl
   }
+
+  /** Parent type for Modifiers to resources (representing URL parameters)
+    * (eg `String*`)
+    * Each method in Modifier should be in one of the following formats:
+    * * `\@Param def PARAM_TO_INJECT(x: TYPE_OR_TYPE*): this.type = Modifier.body`
+    * * `def PARAM_TO_INJECT(x: TYPE_OR_TYPE*): this.type = self.withModifier((CUSTOM_STR, x)).asInstanceOf[this.type]`
+    * In the former case then `Modifier.body` is replaced by an auto-generated code block
+    */
+  trait Modifier { self: BaseDriverOp => }
+
   /** Static util methods for `Modifier` */
   object Modifier {
+    /** Placeholder that gets filled in by the `@Param` annotation */
+    val Body = null
+
     /** Converts a key,value pair into a URL parameter "k=v" format
       * @param kv The contents of a modifier in (string, any) pair format
       * @return A string representation in URL parameter format
@@ -252,14 +181,14 @@ object RestBase {
       * @param kv The key,value pair of the new modifier
       * @return The updated driver operation
       */
-    protected def withModifier(kv: (String, Any)): this.type
+    def withModifier(kv: (String, Any)): this.type
 
     /** Add a generic string header to the driver operation
       *
       * @param h The new header
       * @return The updated driver operation
       */
-    protected def withHeader(h: String): this.type = null //TODO: remove this "=null" once the old modifiers have been removed
+    def withHeader(h: String): this.type
 
     /** Add a generic string modifier to the driver operation
       *

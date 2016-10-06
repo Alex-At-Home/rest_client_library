@@ -1,6 +1,7 @@
 package org.elastic.rest.scala.driver
 
-import RestBase.{TypedOperation, _}
+import RestBase._
+import RestBaseTyped._
 import org.elastic.rest.scala.driver.utils.MacroUtils
 
 import scala.language.experimental.macros

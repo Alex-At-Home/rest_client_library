@@ -1,10 +1,10 @@
 package org.elastic.rest.scala.driver.utils
 
-import org.elastic.rest.scala.driver.RestBase.{CustomTypedToString, RestRequestException, TypedToStringHelper}
+import org.elastic.rest.scala.driver.RestBase.{CustomTypedToString, RestRequestException}
+import org.elastic.rest.scala.driver.RestBaseTyped.TypedToStringHelper
 
 import scala.reflect.runtime._
 import scala.reflect.runtime.universe._
-
 import scala.util.Try
 
 /**

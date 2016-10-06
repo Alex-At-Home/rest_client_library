@@ -1,11 +1,10 @@
-package org.elastic.rest.scala.driver.util
+package org.elastic.rest.scala.driver.test_utils
 
+import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestResources._
-import org.elastic.rest.scala.driver.RestBase.{TypedToStringHelper, _}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
+import scala.concurrent.Future
 import scala.reflect.runtime.universe
 
 /**
@@ -31,16 +30,6 @@ object SampleResources {
   /** JSON implicit, read */
   implicit class DummyStringToJsonHelper(op: BaseDriverOp) extends StringToJsonHelper[MockJson] {
     override def execJ()(implicit driver: RestDriver): Future[MockJson] = driver.exec(op).map(MockJson)
-  }
-
-  /** Dummy helper to convert `InWrapper` to string */
-  implicit val myTypedToStringHelper = new  TypedToStringHelper {
-    override def fromTyped[T](t: T)(implicit ct: universe.WeakTypeTag[T]): String =
-      t.asInstanceOf[InWrapper].fromTyped
-  }
-  implicit val myStringToTypedHelper = new StringToTypedHelper {
-    override def toType[T](s: String)(implicit ct: universe.WeakTypeTag[T]): T =
-      OutWrapper(s).asInstanceOf[T]
   }
 
   // API Model

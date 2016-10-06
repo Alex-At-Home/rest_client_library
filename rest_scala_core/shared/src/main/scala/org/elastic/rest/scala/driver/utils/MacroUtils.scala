@@ -1,6 +1,7 @@
 package org.elastic.rest.scala.driver.utils
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, JsonToStringHelper, TypedOperation, TypedToStringHelper}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, JsonToStringHelper}
+import org.elastic.rest.scala.driver.RestBaseTyped.{TypedOperation, TypedToStringHelper}
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros._
@@ -9,6 +10,35 @@ import scala.reflect.macros._
   * Contains scala macros
   */
 object MacroUtils {
+
+  /**
+    * Injects the name of the method into the parameter
+    * @param c Whitebox macro context
+    * @param annottees The code to annotate
+    * @return
+    */
+  def modifierImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+
+    val newMethod = annottees map (_.tree) toList match {
+      case (methodDef: DefDef) :: Nil =>
+        methodDef match {
+          case q"$modifiers def $methodName($fieldName: $fieldVal): $retType = $body" =>
+            val methodNameStr = s"${methodName.toString}"
+            q"""def $methodName($fieldName: $fieldVal): this.type = {
+               this.asInstanceOf[BaseDriverOp].withModifier(($methodNameStr, $fieldName)).asInstanceOf[this.type]
+            }"""
+          case x @ _ => c.abort(c.enclosingPosition,
+            s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+          )
+        }
+
+      case x @ _ => c.abort(c.enclosingPosition,
+        s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+      )
+    }
+    c.Expr[Any]{ newMethod }
+  }
 
   /** OpType macro
     * (from: http://stackoverflow.com/questions/25127140/how-can-parameters-settings-be-passed-to-a-scala-macro/25219644#25219644)
@@ -75,46 +105,6 @@ object MacroUtils {
     """
   }
 
-  /** The actual code in quasi-codes for building the header/param modifiable case class
-    * (untyped return)
-    *
-    * @param c The context of the macro operation
-    * @param self The `RestResource`
-    * @param opType The operation type
-    * @param body The body to post
-    * @param modifiers The parameters/modifiers
-    * @param headers The headers
-    * @param ctt The evidence for the trait containing the list of available modifiers
-    * @param cto The evidence for the output
-    * @tparam T The trait containing the list of available modifiers
-    * @tparam O The output type
-    * @return The macro code to inject
-    */
-  private def buildInternalClass[T, O]
-  (c: blackbox.Context)
-  (self: c.Expr[c.PrefixType], opType: String, body: c.Expr[Option[String]],
-   modifiers: List[String], headers: List[String],
-   ctt: c.WeakTypeTag[T], cto: c.WeakTypeTag[O]) =
-  {
-    import c.universe._
-
-    q"""
-      case class Internal
-      (resource: RestResource, op: String, body: Option[String], mods: List[(String, Any)], headers: List[String])
-        extends $ctt with TypedOperation[$cto]
-      {
-        override val ct: scala.reflect.runtime.universe.WeakTypeTag[$cto] =
-          scala.reflect.runtime.universe.weakTypeTag[$cto]
-
-        override def withModifier(kv: (String, Any)): this.type = Internal(resource, op, body, kv :: mods, headers)
-          .asInstanceOf[this.type]
-        override def withHeader(h: String): this.type = Internal(resource, op, body, mods, h :: headers)
-          .asInstanceOf[this.type]
-      }
-      Internal($self, $opType, $body, $modifiers, $headers)
-    """
-  }
-
   /**
     * The Macro implementation, allows for modifiers to be chained
     * Without this, needed two extra case classes for each combination of modifiers
@@ -163,7 +153,7 @@ object MacroUtils {
     val self = c.prefix
 
     c.Expr[T with TypedOperation[O]] {
-      buildInternalClass[T, O](c)(self, opType, reify { None }, List(), List(), ctt, cto)
+      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, reify { None }, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -222,7 +212,7 @@ object MacroUtils {
     val maybeBody = reify { Option(jsonToStringHelper.splice.fromJson(body.splice)) }
 
     c.Expr[T with TypedOperation[O]] {
-      buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -286,7 +276,7 @@ object MacroUtils {
     val maybeBody = reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
 
     c.Expr[T with TypedOperation[O]] {
-      buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -344,7 +334,7 @@ object MacroUtils {
     val maybeBody = reify { Option(body.splice) }
 
     c.Expr[T] {
-      buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }

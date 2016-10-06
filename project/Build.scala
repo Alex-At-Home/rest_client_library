@@ -1,7 +1,5 @@
 import sbt._
 import Keys._
-import sbtassembly.AssemblyKeys._
-import sbtassembly.{MergeStrategy, PathList}
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
@@ -46,7 +44,7 @@ object MyBuild extends Build {
   )
   .enablePlugins(ScalaJSPlugin)
   .aggregate(
-    rest_scala_core_JVM,
+    rest_scala_coreJVM,
     rest_json_circe_module
   )
 
@@ -57,34 +55,22 @@ object MyBuild extends Build {
   lazy val rest_scala_core = crossProject
       .in(file("rest_scala_core"))
       .settings(
-        ( buildSettings ++ Seq(
+        buildSettings ++ Seq(
           name := "REST Scala Core",
           version := restScalaDriverVersion,
           apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
           autoAPIMappings := true,
           libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
-          libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test", //TODO
+          libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test", //TODO tidy up
           testFrameworks += new TestFramework("utest.runner.Framework")
-        )): _*)
+        ): _*)
       .jvmSettings()
-      .jsSettings()
+      .jsSettings(
+        scalaJSUseRhino in Global := false
+      )
 
-  lazy val rest_scala_core_JVM = rest_scala_core.jvm
-  lazy val rest_scala_core_JS = rest_scala_core.js
-
-//  lazy val rest_scala_core: Project = Project(
-//    "rest_scala_core",
-//    file("rest_scala_core"),
-//    settings = buildSettings ++ Seq(
-//      name := "REST Scala Core",
-//      version := restScalaDriverVersion,
-//      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
-//      autoAPIMappings := true,
-//      libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
-//      libraryDependencies += utestJvmDeps,
-//      testFrameworks += new TestFramework("utest.runner.Framework")
-//    )
-//  )
+  lazy val rest_scala_coreJVM = rest_scala_core.jvm
+  lazy val rest_scala_coreJS = rest_scala_core.js
 
   lazy val rest_json_circe_module: Project = Project(
     "rest_json_circe_module",
@@ -98,17 +84,17 @@ object MyBuild extends Build {
       libraryDependencies ++= circeDeps,
       testFrameworks += new TestFramework("utest.runner.Framework")
     )
-  ).dependsOn(rest_scala_core_JVM)
+  ).dependsOn(rest_scala_coreJVM)
 
   // Doc project
   // (from https://groups.google.com/forum/#!topic/simple-build-tool/QXFsjLozLyU)
   def mainDirs(project: Project) = unmanagedSourceDirectories in project in Compile
   lazy val doc = Project("doc", file("doc"))
-    .dependsOn(rest_scala_core_JVM, rest_json_circe_module)
+    .dependsOn(rest_scala_coreJVM, rest_json_circe_module)
     .settings(buildSettings ++ Seq(
         version := restScalaDriverVersion,
         unmanagedSourceDirectories in Compile <<= Seq(
-          mainDirs(rest_scala_core_JVM),
+          mainDirs(rest_scala_coreJVM),
           mainDirs(rest_json_circe_module)
         ).join.apply {(s) => s.flatten}
       )
