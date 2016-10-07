@@ -8,7 +8,7 @@ This is a small library designed to make it easy to build clients/drivers for (J
    * (`*`) This currently comes with some caveats, see below under TODO_LINK
 * Versionable
 * "Bring-your-own-HTTP-client"
-* _(Currently does not run in ScalaJS, though that is a longer term goal)_
+* Runs in [Scala.JS](https://www.scala-js.org/) as well as in the JVM
 
 Note that the underlying idea is that these clients map very tightly to the REST endpoints exposed by the target service. This has two implications:
 * To understand a service, you only need to understand the REST interface (vs both the REST interface and the scala/java/whatever API)
@@ -46,8 +46,8 @@ object ApiModel {
     with RestResource
 
   trait PrettyModifierGroup extends PrettyModifier with BaseDriverOp 
-  trait PrettyModifier extends Modifier { self: BaseDriverOp =>
-    def pretty(b: Boolean) = self.withModifier(this.getModifier(b))
+  trait PrettyModifier extends Modifier { 
+    @Param def pretty(b: Boolean) = Modifier.body
   }
 }
 ```
@@ -75,7 +75,7 @@ The REST driver supports any JSON library, with a simple connector (see below). 
 
 For returning the REST response in JSON directly, import all the classes in the desired JSON connector (eg `import org.elastic.rest.scala.driver.json.CirceJsonModule._`), and then:
 * call the implicit `execJ` on the `BaseDriverOp` that is returned from the `read()`/`write(...)`/`send(...)`/`delete()`/etc calls to return a `Future[J]` where `J` is eg `Json` in [CIRCE](https://github.com/travisbrown/circe), TODO other examples
-* When sending data (eg in `write()` or `send()` calls, simply pass an object of type `J` (eg TODO) instead of a String. (Or use `resultS`/`resultJ` to get the result via a single blocking call).
+* When sending data (eg in `write()` or `send()` calls, simply pass an object of type `J` (eg TODO) instead of a String. (Or use `resultS`/`resultJ` to get the result via a single blocking call, though not in Scala.JS of course).
 
 eg:
 

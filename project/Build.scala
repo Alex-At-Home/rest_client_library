@@ -24,14 +24,7 @@ object MyBuild extends Build {
   // Dependencies:
 
   val circeVersion = "0.4.1"
-  lazy val circeDeps = Seq(
-    "io.circe" %% "circe-core",
-    "io.circe" %% "circe-generic",
-    "io.circe" %% "circe-parser"
-  ).map(_ % circeVersion)
-
   val utestJvmVersion = "0.4.3"
-  lazy val utestJvmDeps = "com.lihaoyi" %% "utest" % utestJvmVersion % "test"
 
   // Project definitions
 
@@ -45,7 +38,9 @@ object MyBuild extends Build {
   .enablePlugins(ScalaJSPlugin)
   .aggregate(
     rest_scala_coreJVM,
-    rest_json_circe_module
+    rest_scala_coreJS,
+    rest_json_circe_moduleJVM,
+    rest_json_circe_moduleJS
   )
 
   val githubName = "rest_client_library"
@@ -61,7 +56,7 @@ object MyBuild extends Build {
           apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
           autoAPIMappings := true,
           libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
-          libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test", //TODO tidy up
+          libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
           testFrameworks += new TestFramework("utest.runner.Framework")
         ): _*)
       .jvmSettings()
@@ -72,30 +67,41 @@ object MyBuild extends Build {
   lazy val rest_scala_coreJVM = rest_scala_core.jvm
   lazy val rest_scala_coreJS = rest_scala_core.js
 
-  lazy val rest_json_circe_module: Project = Project(
-    "rest_json_circe_module",
-    file("rest_json_circe_module"),
-    settings = buildSettings ++ Seq(
-      name := "REST JSON - CIRCE module",
-      version := restScalaDriverVersion,
-      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
-      autoAPIMappings := true,
-      libraryDependencies += utestJvmDeps,
-      libraryDependencies ++= circeDeps,
-      testFrameworks += new TestFramework("utest.runner.Framework")
+  lazy val rest_json_circe_module = crossProject
+    .in(file("rest_json_circe_module"))
+    .settings(
+      buildSettings ++ Seq(
+        name := "REST JSON - CIRCE module",
+        version := restScalaDriverVersion,
+        apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
+        autoAPIMappings := true,
+        libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
+        libraryDependencies ++= Seq(
+            "io.circe" %%% "circe-core",
+            "io.circe" %%% "circe-generic",
+            "io.circe" %%% "circe-parser"
+          )
+          .map(_ % circeVersion),
+        testFrameworks += new TestFramework("utest.runner.Framework")
+      ): _*)
+    .jvmSettings()
+    .jsSettings(
+      scalaJSUseRhino in Global := false
     )
-  ).dependsOn(rest_scala_coreJVM)
+
+  lazy val rest_json_circe_moduleJVM = rest_json_circe_module.jvm dependsOn rest_scala_coreJVM
+  lazy val rest_json_circe_moduleJS = rest_json_circe_module.js dependsOn rest_scala_coreJS
 
   // Doc project
   // (from https://groups.google.com/forum/#!topic/simple-build-tool/QXFsjLozLyU)
   def mainDirs(project: Project) = unmanagedSourceDirectories in project in Compile
   lazy val doc = Project("doc", file("doc"))
-    .dependsOn(rest_scala_coreJVM, rest_json_circe_module)
+    .dependsOn(rest_scala_coreJVM, rest_json_circe_moduleJVM)
     .settings(buildSettings ++ Seq(
         version := restScalaDriverVersion,
         unmanagedSourceDirectories in Compile <<= Seq(
           mainDirs(rest_scala_coreJVM),
-          mainDirs(rest_json_circe_module)
+          mainDirs(rest_json_circe_moduleJVM)
         ).join.apply {(s) => s.flatten}
       )
     )
