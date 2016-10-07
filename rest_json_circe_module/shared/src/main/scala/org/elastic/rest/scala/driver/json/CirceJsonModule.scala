@@ -3,6 +3,7 @@ package org.elastic.rest.scala.driver.json
 import io.circe._
 import io.circe.parser.parse
 import org.elastic.rest.scala.driver.RestBase._
+import org.elastic.rest.scala.driver.RestBaseImplicits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -1,9 +1,5 @@
-package org.elastic.rest.scala.driver.json
+package org.elastic.rest.scala.driver.json.tests
 
-import utest._
-
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 import io.circe._
 import io.circe.parser.parse
 import org.elastic.rest.scala.driver.RestBase
@@ -11,9 +7,12 @@ import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.utils.MockRestDriver
 import org.elastic.rest.scala.driver.json.CirceJsonModule._
+import utest._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-object CirceModuleTests extends TestSuite {
+object CirceJsonModuleTests extends TestSuite {
 
   val tests = this {
     val handler: PartialFunction[BaseDriverOp, Future[String]] = {
@@ -33,7 +32,7 @@ object CirceModuleTests extends TestSuite {
     }
     "Test JSON - write" - {
       val json = parse("""{ "test": "write" }""").getOrElse(Json.Null)
-      TestApiUntyped.`/`().write(json).execJ().map { result =>
+      TestApiUntyped.`/`().writeJ(json).execJ().map { result =>
         result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
       }
     }

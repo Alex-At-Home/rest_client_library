@@ -1,7 +1,8 @@
 package org.elastic.rest.scala.driver.utils
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, JsonToStringHelper}
-import org.elastic.rest.scala.driver.RestBaseTyped.{TypedOperation, TypedToStringHelper}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, TypedOperation}
+import org.elastic.rest.scala.driver.RestBaseImplicits.JsonToStringHelper
+import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.RuntimeTypedToStringHelper
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros._
@@ -69,6 +70,43 @@ object MacroUtils {
         "Failed to get method, did you specify the @OpType(method) annotation?" +
           s" annotations = ${c.macroApplication.symbol.annotations}")
     )
+  }
+
+  /** The actual code in quasi-codes for building the header/param modifiable case class
+    * (typed return)
+    *
+    * @param c The context of the macro operation
+    * @param self The `RestResource`
+    * @param opType The operation type
+    * @param body The body to post
+    * @param modifiers The parameters/modifiers
+    * @param headers The headers
+    * @param ctt The evidence for the trait containing the list of available modifiers
+    * @param cto The evidence for the output
+    * @tparam T The trait containing the list of available modifiers
+    * @tparam O The output type
+    * @return The macro code to inject
+    */
+  def buildInternalClass[T, O]
+    (c: blackbox.Context)
+    (self: c.Expr[c.PrefixType], opType: String, body: c.Expr[Option[String]],
+     modifiers: List[String], headers: List[String],
+     ctt: c.WeakTypeTag[T], cto: c.WeakTypeTag[O]) =
+  {
+    import c.universe._
+
+    q"""
+      case class Internal
+      (resource: RestResource, op: String, body: Option[String], mods: List[(String, Any)], headers: List[String])
+        extends $ctt with TypedOperation[$cto]
+      {
+        override def withModifier(kv: (String, Any)): this.type = Internal(resource, op, body, kv :: mods, headers)
+          .asInstanceOf[this.type]
+        override def withHeader(h: String): this.type = Internal(resource, op, body, mods, h :: headers)
+          .asInstanceOf[this.type]
+      }
+      Internal($self, $opType, $body, $modifiers, $headers)
+    """
   }
 
   /** The actual code in quasi-codes for building the header/param modifiable case class
@@ -153,7 +191,7 @@ object MacroUtils {
     val self = c.prefix
 
     c.Expr[T with TypedOperation[O]] {
-      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, reify { None }, List(), List(), ctt, cto)
+      buildInternalClass[T, O](c)(self, opType, reify { None }, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -212,7 +250,7 @@ object MacroUtils {
     val maybeBody = reify { Option(jsonToStringHelper.splice.fromJson(body.splice)) }
 
     c.Expr[T with TypedOperation[O]] {
-      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -232,7 +270,7 @@ object MacroUtils {
     */
   def materializeOpImpl_CBody[T <: BaseDriverOp, C]
   (c: blackbox.Context)(body: c.Expr[C])
-  (typeToStringHelper: c.Expr[TypedToStringHelper])
+  (typeToStringHelper: c.Expr[RuntimeTypedToStringHelper])
   (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C])
   : c.Expr[T] =
   {
@@ -240,10 +278,11 @@ object MacroUtils {
 
     val opType = getOpType(c)
     val self = c.prefix
+    val resource = c.Expr[c.PrefixType] { q"$self.resource" }
     val maybeBody = reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
 
     c.Expr[T] {
-      buildInternalClass[T](c)(self, opType, maybeBody, List(), List(), ctt)
+      buildInternalClass[T](c)(resource, opType, maybeBody, List(), List(), ctt)
         .asInstanceOf[c.Tree]
     }
   }
@@ -264,19 +303,20 @@ object MacroUtils {
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
   def materializeOpImpl_CBody_TypedOutput[T <: BaseDriverOp, C, O]
-  (c: blackbox.Context)(body: c.Expr[C])
-  (typeToStringHelper: c.Expr[TypedToStringHelper])
-  (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C], cto: c.WeakTypeTag[O])
-  : c.Expr[T] =
+    (c: blackbox.Context)(body: c.Expr[C])
+    (typeToStringHelper: c.Expr[RuntimeTypedToStringHelper])
+    (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C], cto: c.WeakTypeTag[O])
+    : c.Expr[T] =
   {
     import c.universe._
 
     val opType = getOpType(c)
     val self = c.prefix
+    val resource = c.Expr[c.PrefixType] { q"$self.resource" }
     val maybeBody = reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
 
     c.Expr[T with TypedOperation[O]] {
-      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      buildInternalClass[T, O](c)(resource, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }
@@ -334,7 +374,7 @@ object MacroUtils {
     val maybeBody = reify { Option(body.splice) }
 
     c.Expr[T] {
-      MacroUtilsTyped.buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
+      buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
   }

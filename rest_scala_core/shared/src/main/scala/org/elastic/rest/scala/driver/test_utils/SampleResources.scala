@@ -1,11 +1,11 @@
 package org.elastic.rest.scala.driver.test_utils
 
 import org.elastic.rest.scala.driver.RestBase._
+import org.elastic.rest.scala.driver.RestBaseImplicits._
 import org.elastic.rest.scala.driver.RestResources._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.reflect.runtime.universe
 
 /**
   * Useful sample REST resources for testing

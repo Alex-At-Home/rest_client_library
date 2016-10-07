@@ -4,7 +4,8 @@ import io.circe.jawn._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder}
 import org.elastic.rest.scala.driver.RestBase._
-import org.elastic.rest.scala.driver.RestBaseTyped._
+import org.elastic.rest.scala.driver.RestBaseImplicits._
+import org.elastic.rest.scala.driver.RestBaseRuntimeTyped._
 import org.elastic.rest.scala.driver.RestResources.RestWritableTU
 import org.elastic.rest.scala.driver.utils.NoJsonHelpers
 import org.elastic.rest.scala.driver.json.utils.MacroUtils
@@ -17,31 +18,10 @@ import scala.reflect.runtime.universe._
 import scala.language.experimental.macros
 
 /** Integration for CIRCE with REST drivers
-  * to decide which JSON lib to use for typed on a case by case....
+  * Uses runtime reflection so will only work on the JVM
+  * It is recommended to use `CirceTypeModule` instead, which uses macros
   */
-object CirceTypeModule {
-
-  /**
-    * TODO
-    * @param typedOp
-    * @tparam T
-    */
-  implicit class TestStringToTypeHelper[T](val typedOp: TypedOperation[T]) extends StringToTypedImplicitBase[T] {
-
-    /**
-      * TODO
-      * @param driver
-      * @param ec
-      * @return
-      */
-    override def testExec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] =
-      macro MacroUtils.execMaterialize[T]
-  }
-
-  implicit class TestWriteHelper[D <: BaseDriverOp, I](val resource: RestWritableTU[D, I]) extends TypedToStringImplicitBaseWritableTU[D, I] {
-    @OpType("write")
-    override def testWrite(body: I): D = macro MacroUtils.writeMaterialize[D, I]
-  }
+object CirceRuntimeTypeModule {
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +97,7 @@ object CirceTypeModule {
   // Implicits
 
   /** Typed inputs */
-  implicit val typedToStringHelper = new TypedToStringHelper() {
+  implicit val typedToStringHelper = new RuntimeTypedToStringHelper() {
     override def fromTyped[T](t: T)(implicit ct: WeakTypeTag[T]): String = t match {
       case custom: CustomTypedToString => custom.fromTyped
       case _ =>
@@ -130,7 +110,7 @@ object CirceTypeModule {
   }
 
   /** Typed outputs */
-  implicit val stringToTypedHelper = new StringToTypedHelper() {
+  implicit val stringToTypedHelper = new RuntimeStringToTypedHelper() {
     override def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T = {
       if (ct.tpe <:< typeOf[CustomStringToTyped]) {
         NoJsonHelpers.createCustomTyped(s)

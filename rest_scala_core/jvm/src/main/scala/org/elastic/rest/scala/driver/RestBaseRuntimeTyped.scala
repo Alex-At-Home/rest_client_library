@@ -5,44 +5,20 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.reflect.runtime.universe._
 import RestBase._
-import org.elastic.rest.scala.driver.RestResources._
 
 /** Contains JVM specific implementation of typed support for the REST driver
   */
-object RestBaseTyped {
-
-  /**
-    * TODO test code ... create an implicit class based on this?
-    * @tparam T
-    */
-  trait StringToTypedImplicitBase[T] {
-    val typedOp: TypedOperation[T]
-
-    //TODO: can't override macros so need 2x compile units here or just tell people what to do...
-    def testExec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] = null
-
-    def testResult(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      Try { Await.result(this.testExec(), Option(timeout).getOrElse(driver.timeout)) }
-  }
-
-  trait TypedToStringImplicitBaseWithDataReadableTU[D <: BaseDriverOp, I]
-  trait TypedToStringImplicitBaseDataReadableTT[D <: BaseDriverOp, I, O]
-  trait TypedToStringImplicitBaseWritableTU[D <: BaseDriverOp, I] {
-    val resource: RestWritableTU[D, I]
-    def testWrite(body: I): D = null.asInstanceOf[D]
-  }
-  trait TypedToStringImplicitBaseWritableTT[D <: BaseDriverOp, I, O]
-  trait TypedToStringImplicitBaseSendableTU[D <: BaseDriverOp, I]
-  trait TypedToStringImplicitBaseSendableTT[D <: BaseDriverOp, I, O]
-  trait TypedToStringImplicitBaseWithDataDeletableTU[D <: BaseDriverOp, I]
-  trait TypedToStringImplicitBaseWithDataDeletableTT[D <: BaseDriverOp, I, O]
+object RestBaseRuntimeTyped {
 
   /** A trait to be implemented and used as an implicit to define how to go from a typed object
     * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
     * To handle `CustomTypedToString`, `fromTyped` should check for `T` being an instance of that
     * and handle it separately
+    *
+    * This is the runtime version - it is recommended to use `TypedToStringHelper` unless there
+    * is a good reason not to
     */
-  trait TypedToStringHelper {
+  trait RuntimeTypedToStringHelper {
     /** Helper to convert from a typed (Case class) object to a string, see above
       * remarks about handling `T` that is inherited from `CustomTypedToString`
       *
@@ -57,8 +33,11 @@ object RestBaseTyped {
     * JSON string (ie a return from an operation) to a typed (case class) object
     * Note that the overridden `toType` should check `ct.tpe <:< CustomStringToTyped` and
     * simply return `x.asInstanceOf[CustomStringToTyped].toType(s)` in such cases
+    *
+    * This is the runtime version - it is recommended to use `StringToTypedHelper` unless there
+    * is a good reason not to
     */
-  trait StringToTypedHelper {
+  trait RuntimeStringToTypedHelper {
 
     /** Helper to convert from a JSON string to a typed (case class) object
       *
@@ -69,48 +48,56 @@ object RestBaseTyped {
       */
     def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T
   }
-  /** A trait of `BaseDriverOp` that indicates the typed return type of an operation
+
+  /** Decorates a TypedOperation[T] with `exec` and `result` methods to execute the operation (async or sync)
+    * (which is a trait of `BaseDriverOp` that indicates the typed return type of an operation)
+    *
+    * This is the runtime version - it is recommended to use `StringToTypedHelper` unless there
+    * is a good reason not to
     *
     * @tparam T The type of the operation return
     */
-  trait TypedOperation[T] { self: BaseDriverOp =>
-
-    /**
-      * Evidence for the type of the operation
-      */
-    protected implicit val ct: WeakTypeTag[T]
+  implicit class RuntimeTypedOperation[T](typedOp: TypedOperation[T] with BaseDriverOp) {
 
     /** Actually executes the operation (aysnc)
+      *
+      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits
+      * derived from `StringToTypedHelper` where possible)
       *
       * @param stringToTypedHelper An implicit helper to convert the op return to a type
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
+      * @param ct The classtag for the output type
       * @return A future containing the result of the operation as a type
       */
     def exec
     ()
-    (implicit stringToTypedHelper: StringToTypedHelper,
+    (implicit stringToTypedHelper: RuntimeStringToTypedHelper,
      driver: RestDriver,
-     ec: ExecutionContext
-    )
+     ec: ExecutionContext,
+     ct: WeakTypeTag[T])
     : Future[T] =
-    self.execS().map(stringToTypedHelper.toType(_)(ct))
+    typedOp.execS().map(stringToTypedHelper.toType(_)(ct))
 
     /** Actually executes the operation (sync)
+      *
+      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits
+      * derived from `StringToTypedHelper` where possible)
       *
       * @param timeout Optionally, the amount of time to wait before failing
       * @param stringToTypedHelper An implicit helper to convert the op return to a type
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
+      * @param ct The classtag for the output type
       * @return The result of the operation as a type
       */
     def result
     (timeout: Duration = null)
-    (implicit stringToTypedHelper: StringToTypedHelper,
+    (implicit stringToTypedHelper: RuntimeStringToTypedHelper,
      driver: RestDriver,
-     ec: ExecutionContext)
+     ec: ExecutionContext,
+     ct: WeakTypeTag[T])
     : Try[T] =
     Try { Await.result(this.exec(), Option(timeout).getOrElse(driver.timeout)) }
-
   }
 }

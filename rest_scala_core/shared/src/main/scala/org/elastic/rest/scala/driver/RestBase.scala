@@ -27,68 +27,6 @@ object RestBase {
     */
   case class RestRequestException(message: String) extends Exception(message)
 
-  /** Case classes that want a custom overwrite should inherit this trait and implement
-    * `fromTyped`, bypasses needing a JSON library with an overridden serializer etc etc
-    */
-  trait CustomTypedToString {
-    /** Converts self to JSON string
-      *
-      * @return self as JSON string
-      */
-    def fromTyped: String
-  }
-
-  /** Classes that want a custom overwrite as return types should inherit this trait
-    * and implement `toType`, typically still use a JSON library, eg to wrap a JSON element
-    *  and provide helpers
-    *
-    *  This is a pure trait, used by type handlers (like `CirceTypeModule` to decide when to override using
-    *  standard JSON processing; all children of it must support a constructor with a single string arg
-    *  (ie the response from the REST driver)
-    *
-    *  Type handlers (like `CirceTypeModule`) should use `NoJsonHelpers.createCustomTyped(s)`
-    */
-  trait CustomStringToTyped
-
-  /** A trait to be implemented and used as an implicit to define how to go from JSON to string
-    * (defaults to `j.toString`)
-    *
-    * @tparam J The json object type in this library
-    */
-  trait JsonToStringHelper[J] {
-    /** Creates a String from the JSON object of the registered (via implicit) JSON lib
-      * (probably can normally be `j.toString`, which is therefore left in as a default)
-      *
-      * @param j The JSON object
-      * @return The JSON
-      */
-    def fromJson(j: J): String = j.toString
-  }
-
-  /** A trait to be implemented as an implicit class to provide the implicit methods `execJ`
-    * and `resultJ`. Note different to `JsonToStringHelper` in that you declare this as an implicit class
-    * vs `JsonToStringHelper` which you declare as an implicit value
-    *
-    * @tparam J The JSON type
-    */
-  trait StringToJsonHelper[J] {
-    /** Actually executes the operation (async)
-      *
-      * @param driver The driver which executes the operation
-      * @return A future containing the result of the operation as a JSON object
-      */
-    def execJ()(implicit driver: RestDriver): Future[J]
-
-    /** Actually executes the operation (sync)
-      *
-      * @param timeout Optionally, the amount of time to wait before failing
-      * @param driver The driver which executes the operation
-      * @return A future containing the result of the operation as a JSON object
-      */
-    def resultJ(timeout: Duration = null)(implicit driver: RestDriver): Try[J] =
-      Try { Await.result(this.execJ(), Option(timeout).getOrElse(driver.timeout)) }
-  }
-
   /** An annotation type that provides an implementation for the parameters that the modifier
     * injects into the REST resource
     */
@@ -243,6 +181,14 @@ object RestBase {
       */
     def unapply(op: BaseDriverOp) = Some((op.resource, op.op, op.body, op.mods, op.headers))
   }
+
+  /** A trait of `BaseDriverOp` that indicates the typed return type of an operation
+    *
+    * Various implicits provide `exec` and `result` - see `RuntimeTypedOperation` and eg `StringToTypedHelper`
+    *
+    * @tparam T The type of the operation return
+    */
+  trait TypedOperation[T] { self: BaseDriverOp => }
 
   /** The base ES resource, all the case classes should be derived from this
     */

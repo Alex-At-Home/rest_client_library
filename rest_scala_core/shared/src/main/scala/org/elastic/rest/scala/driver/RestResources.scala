@@ -1,7 +1,8 @@
 package org.elastic.rest.scala.driver
 
 import RestBase._
-import RestBaseTyped._
+import RestBaseImplicits._
+import RestBaseRuntimeTyped._
 import org.elastic.rest.scala.driver.utils.MacroUtils
 
 import scala.language.experimental.macros
@@ -85,7 +86,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    def read(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
+    def readS(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
 
     /** Creates a driver operation
       *
@@ -94,7 +95,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    def read[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
+    def readJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
       macro MacroUtils.materializeOpImpl_JBody[D, J]
   }
 
@@ -112,7 +113,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    override def read(body: String): D with TypedOperation[O] =
+    override def readS(body: String): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_Body_TypedOutput[D, O]
 
     /** Creates a driver operation
@@ -122,44 +123,32 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    override def read[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
+    override def readJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_JBody_TypedOutput[D, J, O]
   }
 
   /** The base (untyped) readable resource where the reply is controlled by data written to the resource
     * (input typed, output untyped)
     *
+    * Various implicits provide a typed `read` operation, eg see `RuntimeTypedToStringHelperWithDataReadableTU`
+    * and `TypedToStringHelperWithDataReadableTU`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWithDataReadableTU[D <: BaseDriverOp, I] extends RestWithDataReadable[D] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("GET")
-    def read(body: I)(implicit typeToStringHelper: TypedToStringHelper): D =
-      macro MacroUtils.materializeOpImpl_CBody[D, I]
-  }
+  trait RestWithDataReadableTU[D <: BaseDriverOp, I] extends RestWithDataReadable[D] { self: RestResource => }
 
   /** The base (untyped) readable resource where the reply is controlled by data written to the resource
     * (input typed, output typed)
+    *
+    * Various implicits provide a typed `read` operation, eg see `RuntimeTypedToStringHelperWithDataReadableTT`
+    * and `TypedToStringHelperWithDataReadableTT`
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWithDataReadableTT[D <: BaseDriverOp, I, O] extends RestWithDataReadableUT[D, O] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("GET")
-    def read(body: I)(implicit typeToStringHelper: TypedToStringHelper): D with TypedOperation[O] =
-      macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
-  }
+  trait RestWithDataReadableTT[D <: BaseDriverOp, I, O] extends RestWithDataReadableUT[D, O] { self: RestResource => }
 
   // Sendable
 
@@ -174,7 +163,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    def send(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
+    def sendS(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
 
     /** Creates a driver operation
       *
@@ -183,25 +172,19 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    def send[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
+    def sendJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
       macro MacroUtils.materializeOpImpl_JBody[D, J]
   }
 
   /** The base sendable resource (typed input, untyped output)
     *
+    * Various implicits provide a typed `send` operation, eg see `RuntimeTypedToStringHelperSendableTU`
+    * and `TypedToStringHelperSendableTU`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestSendableTU[D <: BaseDriverOp, I] extends RestSendable[D] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The typed data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("POST")
-    def send(body: I)(implicit typeToStringHelper: TypedToStringHelper): D =
-      macro MacroUtils.materializeOpImpl_CBody[D, I]
-  }
+  trait RestSendableTU[D <: BaseDriverOp, I] extends RestSendable[D] { self: RestResource => }
 
   /** The base sendable resource (untyped input, typed output)
     *
@@ -216,7 +199,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    override def send[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
+    override def sendJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_JBody_TypedOutput[D, J, O]
 
     /** Creates a driver operation
@@ -225,26 +208,20 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    override def send(body: String): D with TypedOperation[O] =
+    override def sendS(body: String): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_Body_TypedOutput[D, O]
   }
 
   /** The base sendable resource (typed input, typed output)
     *
+    * Various implicits provide a typed `send` operation, eg see `RuntimeTypedToStringHelperSendableTT`
+    * and `TypedToStringHelperSendableTT`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestSendableTT[D <: BaseDriverOp, I, O] extends RestSendableUT[D, O] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("POST")
-    def send(body: I)(implicit typeToStringHelper: TypedToStringHelper): D with TypedOperation[O] =
-      macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
-  }
+  trait RestSendableTT[D <: BaseDriverOp, I, O] extends RestSendableUT[D, O] { self: RestResource => }
 
   // Sendable with no data
 
@@ -288,7 +265,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    def write(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
+    def writeS(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
 
     /** Creates a driver operation
       *
@@ -297,25 +274,19 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    def write[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
+    def writeJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
       macro MacroUtils.materializeOpImpl_JBody[D, J]
   }
 
   /** The base writable resource (typed input, untyped output)
     *
+    * Various implicits provide a typed `write` operation, eg see `RuntimeTypedToStringHelperWritableTU`
+    * and `TypedToStringHelperWritableTU`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWritableTU[D <: BaseDriverOp, I] extends RestWritable[D] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The typed data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("PUT")
-    def write(body: I)(implicit typeToStringHelper: TypedToStringHelper): D =
-      macro MacroUtils.materializeOpImpl_CBody[D, I]
-  }
+  trait RestWritableTU[D <: BaseDriverOp, I] extends RestWritable[D] { self: RestResource => }
 
   /** The base writable resource (untyped input, typed output)
     *
@@ -330,7 +301,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    override def write[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
+    override def writeJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_JBody_TypedOutput[D, J, O]
 
     /** Creates a driver operation
@@ -339,26 +310,20 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    override def write(body: String): D with TypedOperation[O] =
+    override def writeS(body: String): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_Body_TypedOutput[D, O]
   }
 
   /** The base writable resource (typed input, typed output)
     *
+    * Various implicits provide a typed `write` operation, eg see `RuntimeTypedToStringHelperWritableTT`
+    * and `TypedToStringHelperWritableTT`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWritableTT[D <: BaseDriverOp, I, O] extends RestWritableUT[D, O] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("PUT")
-    def write(body: I)(implicit typeToStringHelper: TypedToStringHelper): D with TypedOperation[O] =
-      macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
-  }
+  trait RestWritableTT[D <: BaseDriverOp, I, O] extends RestWritableUT[D, O] { self: RestResource => }
 
   // No data writable
 
@@ -432,7 +397,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    def delete(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
+    def deleteS(body: String): D = macro MacroUtils.materializeOpImpl_Body[D]
 
     /** Creates a driver operation
       *
@@ -441,26 +406,20 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    def delete[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
+    def deleteJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D =
       macro MacroUtils.materializeOpImpl_JBody[D, J]
   }
 
   /** The base deletable type where the delete is controlled by data written to the resource
     * (typed input, untyped output)
     *
+    * Various implicits provide a typed `delete` operation, eg see `RuntimeTypedToStringHelperWithDataDeletableTU`
+    * and `TypedToStringHelperWithDataDeletableTU`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWithDataDeletableTU[D <: BaseDriverOp, I] extends RestWithDataDeletable[D] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The typed data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("DELETE")
-    def delete(body: I)(implicit typeToStringHelper: TypedToStringHelper): D =
-      macro MacroUtils.materializeOpImpl_CBody[D, I]
-  }
+  trait RestWithDataDeletableTU[D <: BaseDriverOp, I] extends RestWithDataDeletable[D] { self: RestResource => }
 
   /** The base deletable type where the delete is controlled by data written to the resource
     * (untyped input, typed output)
@@ -476,7 +435,7 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    override def delete[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
+    override def deleteJ[J](body: J)(implicit jsonToStringHelper: JsonToStringHelper[J]): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_JBody_TypedOutput[D, J, O]
 
     /** Creates a driver operation
@@ -485,25 +444,19 @@ object RestResources {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    override def delete(body: String): D with TypedOperation[O] =
+    override def deleteS(body: String): D with TypedOperation[O] =
       macro MacroUtils.materializeOpImpl_Body_TypedOutput[D, O]
   }
 
   /** The base deletable type where the delete is controlled by data written to the resource
     * (untyped input, untyped output)
     *
+    * Various implicits provide a typed `delete` operation, eg see `RuntimeTypedToStringHelperWithDataDeletableTT`
+    * and `TypedToStringHelperWithDataDeletableTT`
+    *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWithDataDeletableTT[D <: BaseDriverOp, I, O] extends RestWithDataDeletableUT[D, O] { self: RestResource =>
-    /** Creates a driver operation
-      *
-      * @param body The data to write to the resource
-      * @return The driver operation
-      */
-    @MacroUtils.OpType("DELETE")
-    def delete(body: I)(implicit typeToStringHelper: TypedToStringHelper): D with TypedOperation[O] =
-      macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
-  }
+  trait RestWithDataDeletableTT[D <: BaseDriverOp, I, O] extends RestWithDataDeletableUT[D, O] { self: RestResource => }
 }
