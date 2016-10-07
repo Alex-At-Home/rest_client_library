@@ -78,7 +78,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestWithDataReadable[D <: BaseDriverOp] {
+  trait RestWithDataReadable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -104,7 +104,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam O The type (case class) of the return operation
     */
-  trait RestWithDataReadableUT[D <: BaseDriverOp, O] extends RestWithDataReadable[D] {
+  trait RestWithDataReadableUT[D <: BaseDriverOp, O] extends RestWithDataReadable[D] { self: RestResource =>
     /**
       * Creates a driver operation
       *
@@ -132,7 +132,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWithDataReadableTU[D <: BaseDriverOp, I] extends RestWithDataReadable[D] {
+  trait RestWithDataReadableTU[D <: BaseDriverOp, I] extends RestWithDataReadable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -150,7 +150,7 @@ object RestResources {
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWithDataReadableTT[D <: BaseDriverOp, I, O] extends RestWithDataReadableUT[D, O] {
+  trait RestWithDataReadableTT[D <: BaseDriverOp, I, O] extends RestWithDataReadableUT[D, O] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -167,7 +167,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestSendable[D <: BaseDriverOp] {
+  trait RestSendable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The String data to write to the resource
@@ -192,7 +192,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestSendableTU[D <: BaseDriverOp, I] extends RestSendable[D] {
+  trait RestSendableTU[D <: BaseDriverOp, I] extends RestSendable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The typed data to write to the resource
@@ -208,7 +208,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam O The type of the output object
     */
-  trait RestSendableUT[D <: BaseDriverOp, O] extends RestSendable[D] {
+  trait RestSendableUT[D <: BaseDriverOp, O] extends RestSendable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The JSON data to write to the resource
@@ -235,7 +235,7 @@ object RestResources {
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestSendableTT[D <: BaseDriverOp, I, O] extends RestSendableUT[D, O] {
+  trait RestSendableTT[D <: BaseDriverOp, I, O] extends RestSendableUT[D, O] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -252,7 +252,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestNoDataSendable[D <: BaseDriverOp] {
+  trait RestNoDataSendable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @return The driver operation
@@ -281,7 +281,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestWritable[D <: BaseDriverOp] {
+  trait RestWritable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The String data to write to the resource
@@ -306,7 +306,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWritableTU[D <: BaseDriverOp, I] extends RestWritable[D] {
+  trait RestWritableTU[D <: BaseDriverOp, I] extends RestWritable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The typed data to write to the resource
@@ -322,7 +322,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam O The type of the output object
     */
-  trait RestWritableUT[D <: BaseDriverOp, O] extends RestWritable[D] {
+  trait RestWritableUT[D <: BaseDriverOp, O] extends RestWritable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The JSON data to write to the resource
@@ -349,7 +349,7 @@ object RestResources {
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWritableTT[D <: BaseDriverOp, I, O] extends RestWritableUT[D, O] {
+  trait RestWritableTT[D <: BaseDriverOp, I, O] extends RestWritableUT[D, O] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -366,7 +366,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestNoDataWritable[D <: BaseDriverOp] {
+  trait RestNoDataWritable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @return The driver operation
@@ -395,7 +395,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestDeletable[D <: BaseDriverOp] {
+  trait RestDeletable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @return The driver operation
@@ -425,7 +425,7 @@ object RestResources {
     *
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     */
-  trait RestWithDataDeletable[D <: BaseDriverOp] {
+  trait RestWithDataDeletable[D <: BaseDriverOp] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource
@@ -451,7 +451,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam I The type of the input object
     */
-  trait RestWithDataDeletableTU[D <: BaseDriverOp, I] extends RestWithDataDeletable[D] {
+  trait RestWithDataDeletableTU[D <: BaseDriverOp, I] extends RestWithDataDeletable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The typed data to write to the resource
@@ -468,7 +468,7 @@ object RestResources {
     * @tparam D The group of modifier operations supported mixed into the `BaseDriverOp`
     * @tparam O The type of the output object
     */
-  trait RestWithDataDeletableUT[D <: BaseDriverOp, O] extends RestWithDataDeletable[D] {
+  trait RestWithDataDeletableUT[D <: BaseDriverOp, O] extends RestWithDataDeletable[D] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The JSON data to write to the resource
@@ -496,7 +496,7 @@ object RestResources {
     * @tparam I The type of the input object
     * @tparam O The type of the output object
     */
-  trait RestWithDataDeletableTT[D <: BaseDriverOp, I, O] extends RestWithDataDeletableUT[D, O] {
+  trait RestWithDataDeletableTT[D <: BaseDriverOp, I, O] extends RestWithDataDeletableUT[D, O] { self: RestResource =>
     /** Creates a driver operation
       *
       * @param body The data to write to the resource

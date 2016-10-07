@@ -20,6 +20,34 @@ import scala.concurrent.duration.Duration
 object CirceModuleTypedTests extends TestSuite {
 
   val tests = this {
+    "Test macro version of typed (read)" - {
+      val handler: PartialFunction[BaseDriverOp, Future[String]] = {
+        case BaseDriverOp(TestApiTyped.`/typed`(), RestBase.GET, _, List(), List()) =>
+          Future.successful("""{ "testRead": "get" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
+      }
+      implicit val mockDriver = new MockRestDriver(handler)
+
+      TestApiTyped.`/typed`().read().testExec().map { result =>
+        result ==>  TestDataModel.TestRead("get")
+      }
+    }
+    "Test macro version of typed (write)" - {
+      val handler: PartialFunction[BaseDriverOp, Future[String]] = {
+        case BaseDriverOp(TestApiTyped.`/typed`(), RestBase.PUT,
+        Some("""{"testWrite":"write"}"""), List(), List()) =>
+          Future.successful("""{ "test": "written" }""")
+        case x @ _ =>
+          Future.failed(new Exception(s"Unexpected request: $x"))
+      }
+      implicit val mockDriver = new MockRestDriver(handler)
+
+      TestApiTyped.`/typed`().testWrite(TestDataModel.TestWrite("write")).execJ().map { result =>
+        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+      }
+    }
+
     "Test typed" - {
       val handler: PartialFunction[BaseDriverOp, Future[String]] = {
         case BaseDriverOp(TestApiTyped.`/typed`(), RestBase.PUT,

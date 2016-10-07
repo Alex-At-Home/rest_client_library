@@ -4,17 +4,46 @@ import io.circe.jawn._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder}
 import org.elastic.rest.scala.driver.RestBase._
-import org.elastic.rest.scala.driver.RestBaseTyped.{StringToTypedHelper, TypedToStringHelper}
+import org.elastic.rest.scala.driver.RestBaseTyped._
+import org.elastic.rest.scala.driver.RestResources.RestWritableTU
 import org.elastic.rest.scala.driver.utils.NoJsonHelpers
+import org.elastic.rest.scala.driver.json.utils.MacroUtils
+import org.elastic.rest.scala.driver.utils.MacroUtils.OpType
 
 import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime._
 import scala.reflect.runtime.universe._
+import scala.language.experimental.macros
 
 /** Integration for CIRCE with REST drivers
   * to decide which JSON lib to use for typed on a case by case....
   */
 object CirceTypeModule {
+
+  /**
+    * TODO
+    * @param typedOp
+    * @tparam T
+    */
+  implicit class TestStringToTypeHelper[T](val typedOp: TypedOperation[T]) extends StringToTypedImplicitBase[T] {
+
+    /**
+      * TODO
+      * @param driver
+      * @param ec
+      * @return
+      */
+    override def testExec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] =
+      macro MacroUtils.execMaterialize[T]
+  }
+
+  implicit class TestWriteHelper[D <: BaseDriverOp, I](val resource: RestWritableTU[D, I]) extends TypedToStringImplicitBaseWritableTU[D, I] {
+    @OpType("write")
+    override def testWrite(body: I): D = macro MacroUtils.writeMaterialize[D, I]
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
 
   // These have to be at the front for some reason
   // See below for the implicits

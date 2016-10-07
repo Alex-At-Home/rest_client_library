@@ -1,7 +1,7 @@
 package org.elastic.rest.scala.driver.utils
 
 import org.elastic.rest.scala.driver.RestBase.{CustomTypedToString, RestRequestException}
-import org.elastic.rest.scala.driver.RestBaseTyped.TypedToStringHelper
+import org.elastic.rest.scala.driver.RestBaseTyped.{StringToTypedHelper, TypedToStringHelper}
 
 import scala.reflect.runtime._
 import scala.reflect.runtime.universe._
@@ -21,6 +21,13 @@ object NoJsonHelpers {
       case custom: CustomTypedToString => custom.fromTyped
       case _ => throw RestRequestException(s"Type ${t.getClass} not supported with JSON lib")
     }
+  }
+
+  /**
+    * Include this to support a typed API made entirely out of custom classes
+    */
+  implicit val NoJsontringToTypedHelper = new StringToTypedHelper() {
+    override def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T = NoJsonHelpers.createCustomTyped(s)
   }
 
   /** Handles getting at a class wtihin an object...

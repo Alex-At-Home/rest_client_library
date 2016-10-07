@@ -5,10 +5,37 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.reflect.runtime.universe._
 import RestBase._
+import org.elastic.rest.scala.driver.RestResources._
 
 /** Contains JVM specific implementation of typed support for the REST driver
   */
 object RestBaseTyped {
+
+  /**
+    * TODO test code ... create an implicit class based on this?
+    * @tparam T
+    */
+  trait StringToTypedImplicitBase[T] {
+    val typedOp: TypedOperation[T]
+
+    //TODO: can't override macros so need 2x compile units here or just tell people what to do...
+    def testExec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] = null
+
+    def testResult(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
+      Try { Await.result(this.testExec(), Option(timeout).getOrElse(driver.timeout)) }
+  }
+
+  trait TypedToStringImplicitBaseWithDataReadableTU[D <: BaseDriverOp, I]
+  trait TypedToStringImplicitBaseDataReadableTT[D <: BaseDriverOp, I, O]
+  trait TypedToStringImplicitBaseWritableTU[D <: BaseDriverOp, I] {
+    val resource: RestWritableTU[D, I]
+    def testWrite(body: I): D = null.asInstanceOf[D]
+  }
+  trait TypedToStringImplicitBaseWritableTT[D <: BaseDriverOp, I, O]
+  trait TypedToStringImplicitBaseSendableTU[D <: BaseDriverOp, I]
+  trait TypedToStringImplicitBaseSendableTT[D <: BaseDriverOp, I, O]
+  trait TypedToStringImplicitBaseWithDataDeletableTU[D <: BaseDriverOp, I]
+  trait TypedToStringImplicitBaseWithDataDeletableTT[D <: BaseDriverOp, I, O]
 
   /** A trait to be implemented and used as an implicit to define how to go from a typed object
     * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
