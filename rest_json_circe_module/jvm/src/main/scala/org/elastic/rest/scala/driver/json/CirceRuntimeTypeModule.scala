@@ -7,7 +7,7 @@ import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestBaseImplicits._
 import org.elastic.rest.scala.driver.RestBaseRuntimeTyped._
 import org.elastic.rest.scala.driver.RestResources.RestWritableTU
-import org.elastic.rest.scala.driver.utils.NoJsonHelpers
+import org.elastic.rest.scala.driver.utils.NoJsonRuntimeHelpers
 import org.elastic.rest.scala.driver.json.utils.MacroUtils
 import org.elastic.rest.scala.driver.utils.MacroUtils.OpType
 
@@ -52,7 +52,7 @@ object CirceRuntimeTypeModule {
         currentMirror.reflectModule(ct.tpe.typeSymbol.companion.asModule)
       }.getOrElse {
         //(difficult case, the inner class is in a trait)
-        val outerMirror = NoJsonHelpers.getOuterInstanceMirror(ct)
+        val outerMirror = NoJsonRuntimeHelpers.getOuterInstanceMirror(ct)
         // Create an instance mirror for T from the outer module:
         outerMirror.reflectModule(ct.tpe.typeSymbol.companion.asModule)
       }
@@ -113,7 +113,7 @@ object CirceRuntimeTypeModule {
   implicit val stringToTypedHelper = new RuntimeStringToTypedHelper() {
     override def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T = {
       if (ct.tpe <:< typeOf[CustomStringToTyped]) {
-        NoJsonHelpers.createCustomTyped(s)
+        NoJsonRuntimeHelpers.createCustomTyped(s)
       }
       else { // normal cases
         //(lazily build a registry of decoders)

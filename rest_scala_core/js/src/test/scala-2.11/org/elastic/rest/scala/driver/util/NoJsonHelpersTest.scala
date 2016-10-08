@@ -1,10 +1,9 @@
 package org.elastic.rest.scala.driver.util
 
-import org.elastic.rest.scala.driver.RestBase.CustomStringToTyped
-import org.elastic.rest.scala.driver.utils.NoJsonHelpers
+import org.elastic.rest.scala.driver.RestBaseImplicits.CustomStringToTyped
 import utest._
 
-object NoJsonHelpersTest extends TestSuite {
+object NoJsonRuntimeHelpersTest extends TestSuite {
 
   case class TestWrapper1(s: String) extends CustomStringToTyped
 

@@ -8,7 +8,7 @@ import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.{RuntimeStringToTypedH
   * Supports typed object for custom classes only, ie if no JSON library is used
   * for some reason
   */
-object NoJsonHelpers {
+object NoJsonRuntimeHelpers {
 
   /**
     * Include this to support a typed API made entirely out of custom classes

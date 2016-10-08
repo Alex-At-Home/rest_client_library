@@ -12,7 +12,7 @@ import scala.util.Try
   * Supports typed object for custom classes only, ie if no JSON library is used
   * for some reason
   */
-object NoJsonHelpers {
+object NoJsonRuntimeHelpers {
 
   /**
     * Include this to support a typed API made entirely out of custom classes
@@ -28,7 +28,7 @@ object NoJsonHelpers {
     * Include this to support a typed API made entirely out of custom classes
     */
   implicit val NoJsontringToTypedHelper = new RuntimeStringToTypedHelper() {
-    override def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T = NoJsonHelpers.createCustomTyped(s)
+    override def toType[T](s: String)(implicit ct: WeakTypeTag[T]): T = NoJsonRuntimeHelpers.createCustomTyped(s)
   }
 
   /** Handles getting at a class wtihin an object...

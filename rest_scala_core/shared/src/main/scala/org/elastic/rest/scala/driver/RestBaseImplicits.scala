@@ -1,7 +1,6 @@
 package org.elastic.rest.scala.driver
 
 import org.elastic.rest.scala.driver.RestBase._
-import org.elastic.rest.scala.driver.RestBaseRuntimeTyped._
 import org.elastic.rest.scala.driver.RestResources._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -132,7 +131,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWithDataReadableTU[D <: BaseDriverOp, I] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWithDataReadableTU[D, I]
+    val resource: RestWithDataReadableTU[D, I] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, untyped output)
@@ -152,7 +151,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWithDataReadableTT[D <: BaseDriverOp, I, O] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWithDataReadableTT[D, I, O]
+    val resource: RestWithDataReadableTT[D, I, O] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, typed output)
@@ -172,7 +171,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWritableTU[D <: BaseDriverOp, I] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWritableTU[D, I]
+    val resource: RestWritableTU[D, I] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, untyped output)
@@ -192,7 +191,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWritableTT[D <: BaseDriverOp, I, O] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWritableTT[D, I, O]
+    val resource: RestWritableTT[D, I, O] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, typed output)
@@ -212,7 +211,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperSendableTU[D <: BaseDriverOp, I] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestSendableTU[D, I]
+    val resource: RestSendableTU[D, I] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, untyped output)
@@ -232,7 +231,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperSendableTT[D <: BaseDriverOp, I, O] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestSendableTT[D, I, O]
+    val resource: RestSendableTT[D, I, O] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, typed output)
@@ -252,7 +251,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWithDataDeletableTU[D <: BaseDriverOp, I] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWithDataDeletableTU[D, I]
+    val resource: RestWithDataDeletableTU[D, I] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, untyped output)
@@ -272,7 +271,7 @@ object RestBaseImplicits {
     */
   trait TypedToStringHelperWithDataDeletableTT[D <: BaseDriverOp, I, O] {
     /** The underlying resource that this implicit is wrapping */
-    val resource: RestWithDataDeletableTT[D, I, O]
+    val resource: RestWithDataDeletableTT[D, I, O] with RestResource
 
     /** Create an executable operation from the inherited resource
       * (typed input, typed output)

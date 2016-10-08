@@ -25,7 +25,8 @@ object CirceTypeModule {
   // Untyped output:
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataReadableTU[D <: BaseDriverOp, I](val resource: RestWithDataReadableTU[D, I])
+  implicit class CirceTypedStringToTypeHelperWithDataReadableTU[D <: BaseDriverOp, I]
+    (val resource: RestWithDataReadableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataReadableTU[D, I]
   {
     @OpType("read")
@@ -33,7 +34,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperSendableTU[D <: BaseDriverOp, I](val resource: RestSendableTU[D, I])
+  implicit class CirceTypedStringToTypeHelperSendableTU[D <: BaseDriverOp, I]
+    (val resource: RestSendableTU[D, I] with RestResource)
     extends TypedToStringHelperSendableTU[D, I]
   {
     @OpType("send")
@@ -41,7 +43,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWritableTU[D <: BaseDriverOp, I](val resource: RestWritableTU[D, I])
+  implicit class CirceTypedStringToTypeHelperWritableTU[D <: BaseDriverOp, I]
+    (val resource: RestWritableTU[D, I] with RestResource)
     extends TypedToStringHelperWritableTU[D, I]
   {
     @OpType("write")
@@ -49,7 +52,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataDeletableTU[D <: BaseDriverOp, I](val resource: RestWithDataDeletableTU[D, I])
+  implicit class CirceTypedStringToTypeHelperWithDataDeletableTU[D <: BaseDriverOp, I]
+    (val resource: RestWithDataDeletableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataDeletableTU[D, I]
   {
     @OpType("delete")
@@ -59,7 +63,8 @@ object CirceTypeModule {
   // Typed output:
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataReadableTT[D <: BaseDriverOp, I, O](val resource: RestWithDataReadableTT[D, I, O])
+  implicit class CirceTypedStringToTypeHelperWithDataReadableTT[D <: BaseDriverOp, I, O]
+    (val resource: RestWithDataReadableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataReadableTT[D, I, O]
   {
     @OpType("read")
@@ -67,7 +72,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperSendableTT[D <: BaseDriverOp, I, O](val resource: RestSendableTT[D, I, O])
+  implicit class CirceTypedStringToTypeHelperSendableTT[D <: BaseDriverOp, I, O]
+    (val resource: RestSendableTT[D, I, O] with RestResource)
     extends TypedToStringHelperSendableTT[D, I, O]
   {
     @OpType("send")
@@ -75,7 +81,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWritableTT[D <: BaseDriverOp, I, O](val resource: RestWritableTT[D, I, O])
+  implicit class CirceTypedStringToTypeHelperWritableTT[D <: BaseDriverOp, I, O]
+    (val resource: RestWritableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWritableTT[D, I, O]
   {
     @OpType("write")
@@ -83,7 +90,8 @@ object CirceTypeModule {
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataDeletableTT[D <: BaseDriverOp, I, O](val resource: RestWithDataDeletableTT[D, I, O])
+  implicit class CirceTypedStringToTypeHelperWithDataDeletableTT[D <: BaseDriverOp, I, O]
+    (val resource: RestWithDataDeletableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataDeletableTT[D, I, O]
   {
     @OpType("delete")

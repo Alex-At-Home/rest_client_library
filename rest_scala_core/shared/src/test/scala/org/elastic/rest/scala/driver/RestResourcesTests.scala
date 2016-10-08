@@ -1,10 +1,9 @@
 package org.elastic.rest.scala.driver
 
 import org.elastic.rest.scala.driver.RestBase._
-import org.elastic.rest.scala.driver.RestBaseRuntimeTyped._
 import org.elastic.rest.scala.driver.RestResources._
+import org.elastic.rest.scala.driver.utils.NoJsonHelpers._
 import org.elastic.rest.scala.driver.test_utils.SampleResources._
-import org.elastic.rest.scala.driver.test_utils.SampleResourcesTyped._
 import utest._
 
 object RestResourcesTests extends TestSuite {

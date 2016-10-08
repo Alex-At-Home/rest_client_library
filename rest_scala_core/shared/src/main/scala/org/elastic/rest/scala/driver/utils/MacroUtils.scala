@@ -3,6 +3,7 @@ package org.elastic.rest.scala.driver.utils
 import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, TypedOperation}
 import org.elastic.rest.scala.driver.RestBaseImplicits.JsonToStringHelper
 import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.RuntimeTypedToStringHelper
+import org.elastic.rest.scala.driver.RestBaseImplicits._
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros._
@@ -279,12 +280,38 @@ object MacroUtils {
     val opType = getOpType(c)
     val self = c.prefix
     val resource = c.Expr[c.PrefixType] { q"$self.resource" }
-    val maybeBody = reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
+    val maybeBody =
+      if (typeToStringHelper != null)
+        reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
+      else
+        c.Expr[Option[String]] { q"Some($body.fromTyped)" }
 
     c.Expr[T] {
       buildInternalClass[T](c)(resource, opType, maybeBody, List(), List(), ctt)
         .asInstanceOf[c.Tree]
     }
+  }
+
+  /**
+    * The Macro implementation, allows for modifiers to be chained
+    * Without this, needed two extra case classes for each combination of modifiers
+    * (one extra class - the first case class can be replaced with a much simpler list
+    * (Custom input type)
+    *
+    * @param c The macro context
+    * @param body The body to write to the resource (or None for pure reads)
+    * @param ctt The operation type evidence (combination of `Modifier` classes and `BaseDriverOp`)
+    * @param ctc The body type evidence (combination of `Modifier` classes and `BaseDriverOp`)
+    * @tparam T The type (combination of `Modifier` classes and `BaseDriverOp`)
+    * @tparam C The input type
+    * @return A chainable version of the `BaseDriverOp` mixed with T
+    */
+  def materializeOpImpl_CBodyCustom[T <: BaseDriverOp, C <: CustomTypedToString]
+    (c: blackbox.Context)(body: c.Expr[C])
+    (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C])
+    : c.Expr[T] =
+  {
+    materializeOpImpl_CBody[T, C](c)(body)(null)(ctt, ctc).asInstanceOf[c.Expr[T]]
   }
 
   /**
@@ -313,7 +340,11 @@ object MacroUtils {
     val opType = getOpType(c)
     val self = c.prefix
     val resource = c.Expr[c.PrefixType] { q"$self.resource" }
-    val maybeBody = reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
+    val maybeBody =
+      if (typeToStringHelper != null)
+        reify { Option(typeToStringHelper.splice.fromTyped[C](body.splice)) }
+      else
+        c.Expr[Option[String]] { q"Some($body.fromTyped)" }
 
     c.Expr[T with TypedOperation[O]] {
       buildInternalClass[T, O](c)(resource, opType, maybeBody, List(), List(), ctt, cto)
@@ -321,6 +352,29 @@ object MacroUtils {
     }
   }
 
+  /**
+    * The Macro implementation, allows for modifiers to be chained
+    * Without this, needed two extra case classes for each combination of modifiers
+    * (one extra class - the first case class can be replaced with a much simpler list
+    * (Custom input type)
+    *
+    * @param c The macro context
+    * @param body The body to write to the resource (or None for pure reads)
+    * @param ctt The operation type evidence (combination of `Modifier` classes and `BaseDriverOp`)
+    * @param ctc The body type evidence
+    * @param cto The output type evidence
+    * @tparam T The type (combination of `Modifier` classes and `BaseDriverOp`)
+    * @tparam C The input type
+    * @tparam O The output type
+    * @return A chainable version of the `BaseDriverOp` mixed with T
+    */
+  def materializeOpImpl_CBodyCustom_TypedOutput[T <: BaseDriverOp, C <: CustomTypedToString, O]
+    (c: blackbox.Context)(body: c.Expr[C])
+    (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C], cto: c.WeakTypeTag[O])
+    : c.Expr[T] =
+  {
+    materializeOpImpl_CBody_TypedOutput[T, C, O](c)(body)(null)(ctt, ctc, cto).asInstanceOf[c.Expr[T]]
+  }
   /**
     * The Macro implementation, allows for modifiers to be chained
     * Without this, needed two extra case classes for each combination of modifiers
