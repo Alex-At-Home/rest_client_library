@@ -50,17 +50,17 @@ object RestBaseAsyncTests extends TestSuite {
       // Read with data
       {
         val expected = "GET: test"
-        val res_ss = `/$resource`("test").read("test").resultS(Duration("1 second")).get
+        val res_ss = `/$resource`("test").readS("test").resultS(Duration("1 second")).get
         res_ss ==> expected
-        val res_js = `/$resource`("test").read(MockJson("test")).resultS(Duration("1 second")).get
+        val res_js = `/$resource`("test").readJ(MockJson("test")).resultS(Duration("1 second")).get
         res_js ==> expected
-        val res_sj = Await.result(`/$resource`("test").read("test").execS(), Duration("1 second"))
+        val res_sj = Await.result(`/$resource`("test").readS("test").execS(), Duration("1 second"))
         res_sj ==> expected
-        val res_jj = Await.result(`/$resource`("test").read(MockJson("test")).execJ(), Duration("1 second"))
+        val res_jj = Await.result(`/$resource`("test").readJ(MockJson("test")).execJ(), Duration("1 second"))
         res_jj.s ==> expected
-        val res_st = `/$resource_ut`("test").read("test").result(Duration("1 second")).get
+        val res_st = `/$resource_ut`("test").readS("test").result(Duration("1 second")).get
         res_st.s ==> expected
-        val res_jt = Await.result(`/$resource_ut`("test").read(MockJson("test")).exec(), Duration("1 second"))
+        val res_jt = Await.result(`/$resource_ut`("test").readJ(MockJson("test")).exec(), Duration("1 second"))
         res_jt.s ==> expected
         val res_ts = `/$resource_tt`("test").read(InWrapper("test")).resultS(Duration("1 second")).get
         res_ts ==> expected
@@ -72,17 +72,17 @@ object RestBaseAsyncTests extends TestSuite {
       // Send
       {
         val expected = "POST: test"
-        val res_ss = `/$resource`("test").send("test").resultS(Duration("1 second")).get
+        val res_ss = `/$resource`("test").sendS("test").resultS(Duration("1 second")).get
         res_ss ==> expected
-        val res_js = `/$resource`("test").send(MockJson("test")).resultS(Duration("1 second")).get
+        val res_js = `/$resource`("test").sendJ(MockJson("test")).resultS(Duration("1 second")).get
         res_js ==> expected
-        val res_sj = Await.result(`/$resource`("test").send("test").execS(), Duration("1 second"))
+        val res_sj = Await.result(`/$resource`("test").sendS("test").execS(), Duration("1 second"))
         res_sj ==> expected
-        val res_jj = Await.result(`/$resource`("test").send(MockJson("test")).execJ(), Duration("1 second"))
+        val res_jj = Await.result(`/$resource`("test").sendJ(MockJson("test")).execJ(), Duration("1 second"))
         res_jj.s ==> expected
-        val res_st = `/$resource_ut`("test").send("test").result(Duration("1 second")).get
+        val res_st = `/$resource_ut`("test").sendS("test").result(Duration("1 second")).get
         res_st.s ==> expected
-        val res_jt = Await.result(`/$resource_ut`("test").send(MockJson("test")).exec(), Duration("1 second"))
+        val res_jt = Await.result(`/$resource_ut`("test").sendJ(MockJson("test")).exec(), Duration("1 second"))
         res_jt.s ==> expected
         val res_ts = `/$resource_tt`("test").send(InWrapper("test")).resultS(Duration("1 second")).get
         res_ts ==> expected
@@ -94,17 +94,17 @@ object RestBaseAsyncTests extends TestSuite {
       // Write
       {
         val expected = "PUT: test"
-        val res_ss = `/$resource`("test").write("test").resultS(Duration("1 second")).get
+        val res_ss = `/$resource`("test").writeS("test").resultS(Duration("1 second")).get
         res_ss ==> expected
-        val res_js = `/$resource`("test").write(MockJson("test")).resultS(Duration("1 second")).get
+        val res_js = `/$resource`("test").writeJ(MockJson("test")).resultS(Duration("1 second")).get
         res_js ==> expected
-        val res_sj = Await.result(`/$resource`("test").write("test").execS(), Duration("1 second"))
+        val res_sj = Await.result(`/$resource`("test").writeS("test").execS(), Duration("1 second"))
         res_sj ==> expected
-        val res_jj = Await.result(`/$resource`("test").write(MockJson("test")).execJ(), Duration("1 second"))
+        val res_jj = Await.result(`/$resource`("test").writeJ(MockJson("test")).execJ(), Duration("1 second"))
         res_jj.s ==> expected
-        val res_st = `/$resource_ut`("test").write("test").result(Duration("1 second")).get
+        val res_st = `/$resource_ut`("test").writeS("test").result(Duration("1 second")).get
         res_st.s ==> expected
-        val res_jt = Await.result(`/$resource_ut`("test").write(MockJson("test")).exec(), Duration("1 second"))
+        val res_jt = Await.result(`/$resource_ut`("test").writeJ(MockJson("test")).exec(), Duration("1 second"))
         res_jt.s ==> expected
         val res_ts = `/$resource_tt`("test").write(InWrapper("test")).resultS(Duration("1 second")).get
         res_ts ==> expected
@@ -116,17 +116,17 @@ object RestBaseAsyncTests extends TestSuite {
       // Delete with data
       {
         val expected = "DELETE: test"
-        val res_ss = `/$resource`("test").delete("test").resultS(Duration("1 second")).get
+        val res_ss = `/$resource`("test").deleteS("test").resultS(Duration("1 second")).get
         res_ss ==> expected
-        val res_js = `/$resource`("test").delete(MockJson("test")).resultS(Duration("1 second")).get
+        val res_js = `/$resource`("test").deleteJ(MockJson("test")).resultS(Duration("1 second")).get
         res_js ==> expected
-        val res_sj = Await.result(`/$resource`("test").delete("test").execS(), Duration("1 second"))
+        val res_sj = Await.result(`/$resource`("test").deleteS("test").execS(), Duration("1 second"))
         res_sj ==> expected
-        val res_jj = Await.result(`/$resource`("test").delete(MockJson("test")).execJ(), Duration("1 second"))
+        val res_jj = Await.result(`/$resource`("test").deleteJ(MockJson("test")).execJ(), Duration("1 second"))
         res_jj.s ==> expected
-        val res_st = `/$resource_ut`("test").delete("test").result(Duration("1 second")).get
+        val res_st = `/$resource_ut`("test").deleteS("test").result(Duration("1 second")).get
         res_st.s ==> expected
-        val res_jt = Await.result(`/$resource_ut`("test").delete(MockJson("test")).exec(), Duration("1 second"))
+        val res_jt = Await.result(`/$resource_ut`("test").deleteJ(MockJson("test")).exec(), Duration("1 second"))
         res_jt.s ==> expected
         val res_ts = `/$resource_tt`("test").delete(InWrapper("test")).resultS(Duration("1 second")).get
         res_ts ==> expected

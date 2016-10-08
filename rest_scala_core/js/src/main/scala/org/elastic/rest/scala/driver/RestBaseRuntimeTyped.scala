@@ -2,9 +2,7 @@ package org.elastic.rest.scala.driver
 
 import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, RestDriver, TypedOperation}
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
 
 /** Contains JS specific implementation of typed support for the REST driver
@@ -78,25 +76,6 @@ object RestBaseRuntimeTyped {
      ec: ExecutionContext)
     : Future[T] =
     typedOp.execS().map(stringToTypedHelper.toType)
-
-    /** Actually executes the operation (sync)
-      *
-      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits
-      * derived from `StringToTypedHelper` where possible)
-      *
-      * @param timeout Optionally, the amount of time to wait before failing
-      * @param stringToTypedHelper An implicit helper to convert the op return to a type
-      * @param driver The driver which executes the operation
-      * @param ec The execution context for futures
-      * @return The result of the operation as a type
-      */
-    def result
-    (timeout: Duration = null)
-    (implicit stringToTypedHelper: RuntimeStringToTypedHelper,
-     driver: RestDriver,
-     ec: ExecutionContext)
-    : Try[T] =
-    Try { Await.result(this.exec(), Option(timeout).getOrElse(driver.timeout)) }
   }
 
 }

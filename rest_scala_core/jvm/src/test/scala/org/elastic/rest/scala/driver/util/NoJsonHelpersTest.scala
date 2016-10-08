@@ -1,6 +1,6 @@
 package org.elastic.rest.scala.driver.util
 
-import org.elastic.rest.scala.driver.RestBase.CustomStringToTyped
+import org.elastic.rest.scala.driver.RestBaseImplicits.CustomStringToTyped
 import org.elastic.rest.scala.driver.utils.NoJsonHelpers
 import utest._
 
