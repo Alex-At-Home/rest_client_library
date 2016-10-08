@@ -8,7 +8,7 @@ This is a small library designed to make it easy to build clients/drivers for (J
    * (`*`) This currently comes with some caveats, see below under TODO_LINK
 * Versionable
 * "Bring-your-own-HTTP-client"
-* _(Currently does not run in ScalaJS, though that is a longer term goal)_
+* Runs in [Scala.JS](https://www.scala-js.org/) as well as in the JVM
 
 Note that the underlying idea is that these clients map very tightly to the REST endpoints exposed by the target service. This has two implications:
 * To understand a service, you only need to understand the REST interface (vs both the REST interface and the scala/java/whatever API)
@@ -46,8 +46,8 @@ object ApiModel {
     with RestResource
 
   trait PrettyModifierGroup extends PrettyModifier with BaseDriverOp 
-  trait PrettyModifier extends Modifier { self: BaseDriverOp =>
-    def pretty(b: Boolean) = self.withModifier(this.getModifier(b))
+  trait PrettyModifier extends Modifier { 
+    @Param def pretty(b: Boolean) = Modifier.body
   }
 }
 ```
@@ -58,11 +58,11 @@ And that's it! See below (TODO_LINK) for more details on the API. Then you can u
   import ApiModel._
   
   val implicit driver = ??? // see below
-  val createRequest = `/database/users`().send(""" { "name": "Alex" } """)
+  val createRequest = `/database/users`().sendS(""" { "name": "Alex" } """) //or sendJ to send JSON, see below
   val createReply: Future[String] = createRequest.execS() //or execJ to get JSON, see below
   // eventually """{"name":"Alex"}"""
   // Blocking version (mostly for testing)
-  `/database/users`().send(""" { "name": "Alex" } """).resultS()
+  `/database/users`().sendS(""" { "name": "Alex" } """).resultS() //or sendJ, or resultJ
   // Try[String] = Success("""{"name":"Alex"}""")
   val getRequest = `/database/users/$userId`("Alex").pretty(true)
   val getReply: Future[String] = createReply.flatMap(_ => getRequest.execS()) // (or execJ)
@@ -74,8 +74,8 @@ And that's it! See below (TODO_LINK) for more details on the API. Then you can u
 The REST driver supports any JSON library, with a simple connector (see below). Support for CIRCE (TODO_LINK) is provided. 
 
 For returning the REST response in JSON directly, import all the classes in the desired JSON connector (eg `import org.elastic.rest.scala.driver.json.CirceJsonModule._`), and then:
-* call the implicit `execJ` on the `BaseDriverOp` that is returned from the `read()`/`write(...)`/`send(...)`/`delete()`/etc calls to return a `Future[J]` where `J` is eg `Json` in [CIRCE](https://github.com/travisbrown/circe), TODO other examples
-* When sending data (eg in `write()` or `send()` calls, simply pass an object of type `J` (eg TODO) instead of a String. (Or use `resultS`/`resultJ` to get the result via a single blocking call).
+* call the implicit `execJ` on the `BaseDriverOp` that is returned from the `read()`/`writeS(...)`/`sendS(...)`/`delete()`/etc calls to return a `Future[J]` where `J` is eg `Json` in [CIRCE](https://github.com/travisbrown/circe), TODO other examples
+* When sending data (eg in `writeJ()` or `sendJ()` calls, simply pass an object of type `J` (eg TODO) instead of a String. (Or use `resultS`/`resultJ` to get the result via a single blocking call, though not in Scala.JS of course).
 
 eg:
 
@@ -84,7 +84,7 @@ import org.elastic.rest.scala.driver.json.CirceJsonModule._
 import io.circe._, io.circe.parser._
 
 val jsonIn: Json = parse(""" { "name": "Alex" } """).getOrElse(Json.Null)
-val tryJsonOut: Try[Json] = `/database/users`().send(json).resultJ()
+val tryJsonOut: Try[Json] = `/database/users`().sendJ(json).resultJ()
 // Success({ "name": "Alex" })
 
 ```
@@ -98,7 +98,7 @@ It is possible to declare any of the REST resources as optionally typed in eithe
 * For resources with no input data (such as `Readable[M]`, `Checkable[M]`, etc), the typed variant has a `T` on the end, and an type extra parameter for the type, eg `ReadableT[M, O]` (after `read()`, then an extra method `exec()` returns a future `O`)
 * For resources with both input and output data (such as `Writable[M]` and `Sendable[M]`), there are 3 typed variants:
    * `TU` with one extra type parameter, for typed input and untyped output, eg `WritableTU[M, I]`, with the extra method  `write(I)` that returns a future String/JSON object via `execJ()`/`execS()`
-   * `UT` withone extra type parameter, for untyped input and typed output, eg `SendableUT[M, O]`, where `write(String)` and `write[J](J)` can in addition return a future `O` via `exec()`
+   * `UT` withone extra type parameter, for untyped input and typed output, eg `SendableUT[M, O]`, where `writeS(String)` and `writeJ[J](J)` can in addition return a future `O` via `exec()`
 
 The typed variants require that a JSON module (see below TODO_LINK) is imported for its implicits
 
