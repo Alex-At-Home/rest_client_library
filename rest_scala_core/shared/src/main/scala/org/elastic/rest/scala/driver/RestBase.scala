@@ -207,15 +207,17 @@ object RestBase {
       }
       val locationTemplate = productPrefix.replace("`", "")
       val splits = locationTemplate.split("/")
-      if (splits.nonEmpty) {
-        splits.foldLeft(("", 0)) { case ((acc, i), v) =>
-          v.headOption
-            .filter(_ == '$')
-            .map(_ => (acc + "/" + formatVal(productElement(i)), i + 1))
-            .getOrElse((acc + "/" + v, i))
-        }._1.tail
+      val location = splits match {
+        case Array() | Array ("") => locationTemplate // (JVM and JS versions of /)
+        case _ =>
+          splits.foldLeft(("", 0)) { case ((acc, i), v) =>
+            v.headOption
+              .filter(_ == '$')
+              .map(_ => (acc + "/" + formatVal(productElement(i)), i + 1))
+              .getOrElse((acc + "/" + v, i))
+          }._1.tail
       }
-      else locationTemplate
+      location
     }
     /** The location of the resource, generated from the classname
       * by substituting in the field names
