@@ -18,7 +18,7 @@ object ScalaJsJsonModule {
   }
 
   /** JSON outputs */
-  implicit class StringToCirceHelper(op: BaseDriverOp) extends StringToJsonHelper[js.Object] {
+  implicit class StringToJsJsonHelper(op: BaseDriverOp) extends StringToJsonHelper[js.Object] {
     /** Actually executes the operation (async)
       *
       * @param driver The driver which executes the operation
