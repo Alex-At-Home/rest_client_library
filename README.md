@@ -180,7 +180,26 @@ TODO error types
 
 ### Modifiers
 
-TODO
+Modifiers enables resource developers to register URL parameters. The `M` type parameter referenced above should be of the form:
+* `trait M extends BaseDriverOp with X1 with X2 with ... with Xn`, where each of the `Xi` are traits extending `Modifier` and providing the parameters eg as follows:
+
+```scala
+   // Examples: (by convention normally  only have one parameter per trait but any number is supported)
+   trait Xi extends Modifier {
+      @Param def param_name(b: Boolean): this.type = Modifier.Body
+      @Param def `alt_param_name`(s: String*): this.type = Modifier.Body
+   }
+```
+
+The above will generate two URL parameters with the same names as the methods (backticks removed), eg appending `?param_name=true&alt_param_name=s1,s2` to the executed resource operation.
+
+The `@Param`/`Modifier.Body` auto-generates the parameter name; alternatively the `Modifier` extension can be declared by hand eg as follows:
+
+```scala
+   trait Xi extends Modifier { self: BaseDriverOp =>
+      def param_name(b: Boolean): this.type = self.withModifier(("param_name", b))
+   }
+```
 
 ### Headers
 
