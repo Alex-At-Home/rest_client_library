@@ -27,6 +27,8 @@ object MyBuild extends Build {
   val utestJvmVersion = "0.4.3"
   val rosHttpVersion = "2.0.0-RC1"
 
+  lazy val simpleScalaHttpServer = "com.tumblr" %% "colossus" % "0.8.1" % "test"
+
   // Project definitions
 
   val restScalaDriverVersion = "0.1-SNAPSHOT"
@@ -118,7 +120,9 @@ object MyBuild extends Build {
         libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
         testFrameworks += new TestFramework("utest.runner.Framework")
       ): _*)
-    .jvmSettings()
+    .jvmSettings(
+      libraryDependencies += simpleScalaHttpServer
+    )
     .jsSettings(
       scalaJSUseRhino in Global := false
     )
