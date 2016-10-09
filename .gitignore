@@ -6,6 +6,7 @@
 /rest_json_circe_module/target/
 /rest_json_circe_module/js/target/
 /rest_json_circe_module/jvm/target/
+/rest_json_js_module/target/
 /rest_json_circe_module/shared/target/
 /rest_scala_core/target/
 /rest_scala_core/js/target/

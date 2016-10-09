@@ -25,6 +25,7 @@ object MyBuild extends Build {
 
   val circeVersion = "0.4.1"
   val utestJvmVersion = "0.4.3"
+  val rosHttpVersion = "2.0.0-RC1"
 
   // Project definitions
 
@@ -92,16 +93,51 @@ object MyBuild extends Build {
   lazy val rest_json_circe_moduleJVM = rest_json_circe_module.jvm dependsOn rest_scala_coreJVM
   lazy val rest_json_circe_moduleJS = rest_json_circe_module.js dependsOn rest_scala_coreJS
 
+  lazy val rest_json_js_moduleJS: Project = Project(
+    "rest_json_js_module",
+    file("rest_json_js_module"),
+    settings = buildSettings ++ Seq(
+      name := "REST JSON - ScalaJS module",
+      version := restScalaDriverVersion,
+      apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
+      autoAPIMappings := true,
+      libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
+      testFrameworks += new TestFramework("utest.runner.Framework")
+    )
+  ).enablePlugins(ScalaJSPlugin).dependsOn(rest_scala_coreJS)
+
+  lazy val rest_http_client = crossProject
+    .in(file("rest_http_client"))
+    .settings(
+      buildSettings ++ Seq(
+        name := "REST HTTP Client",
+        version := restScalaDriverVersion,
+        apiURL := Some(url(s"$apiRoot/$githubName/$docVersion/")),
+        autoAPIMappings := true,
+        libraryDependencies += "fr.hmil" %%% "roshttp" % rosHttpVersion,
+        libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
+        testFrameworks += new TestFramework("utest.runner.Framework")
+      ): _*)
+    .jvmSettings()
+    .jsSettings(
+      scalaJSUseRhino in Global := false
+    )
+
+  lazy val rest_http_clientJVM = rest_http_client.jvm dependsOn rest_scala_coreJVM
+  lazy val rest_http_clientJS = rest_http_client.js dependsOn rest_scala_coreJS
+
   // Doc project
   // (from https://groups.google.com/forum/#!topic/simple-build-tool/QXFsjLozLyU)
   def mainDirs(project: Project) = unmanagedSourceDirectories in project in Compile
   lazy val doc = Project("doc", file("doc"))
-    .dependsOn(rest_scala_coreJVM, rest_json_circe_moduleJVM)
+    .dependsOn(rest_scala_coreJVM, rest_json_circe_moduleJVM, rest_json_js_moduleJS, rest_http_clientJVM)
     .settings(buildSettings ++ Seq(
         version := restScalaDriverVersion,
         unmanagedSourceDirectories in Compile <<= Seq(
           mainDirs(rest_scala_coreJVM),
-          mainDirs(rest_json_circe_moduleJVM)
+          mainDirs(rest_json_circe_moduleJVM),
+          mainDirs(rest_json_js_moduleJS),
+          mainDirs(rest_http_clientJVM)
         ).join.apply {(s) => s.flatten}
       )
     )
