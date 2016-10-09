@@ -7,8 +7,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.scalajs.js
 
-//TODO dynamic vs object - former input latter output?
-
 /** Integration for ScalaJS with REST drivers
   * to decide which JSON lib to use for typed on a case by case....
   */
