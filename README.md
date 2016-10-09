@@ -132,9 +132,51 @@ val updatedRecord: Future[DatabaseRecord] = `/database/users/$userId`("Alex").wr
 
 ## Summary of the API
 
+* [Scaladocs for the REST client library](https://alex-at-home.github.io/rest_client_library/current/index.html)
+
 ### Resources
 
-TODO
+#### Declaring resources
+
+Each REST resource should be declared as a case class inherited from a combination (using `extends`/`with`) of the following:
+* `RestResource`, which provides the `location` (`String`) value as follows:
+   * by default the resource URL is auto-generated from the case class name, assuming this name has the format has the format `` `url` `` where url (in backticks) is the path, where each segment name (eg `/segment/name`) is either a string literal or of the format `$variableName` (eg `/segment/$variable/name`). The variables are substituted for the case class parameters in order. 
+   * or you can override it as per normal, eg `override lazy val location: String = "/override/resource/url"`
+* 1+ from the following:
+   * `RestCheckable[M]` / `RestCheckableT[M, O]`, which provides the method `check()` corresponding to the REST `HEAD` request
+   * `RestReadable[M]` / `RestReadableT[M, O]`, which provides the method `read()` corresponding to the REST `GET` request
+   * `RestDeletable[M]` / `RestDeletableT[M, O]`, which provides the method `delete()` corresponding to the REST `DELETE` request
+   * `RestWritable[M]` / `RestWritableUT[M, O]` / `RestWritableTU[M, O]` / `RestWritableTT[M, I, O]` which provides the methods `writeS(str)`, `writeJ(json)`, and optionally `write(typeObj)` corresponding to the REST `PUT` request with a body
+   * `RestSendable[M]` / `RestSendableUT[M, O]` / `RestSendableTU[M, O]` / `RestSendableTT[M, I, O]` which provides the methods `sendS(str)`, `sendJ(json)`, and optionally `send(typeObj)` corresponding to the REST `POST` request with a body
+   * `RestNoDataWritable[M]` / `RestNoDataWritable[M]` which provides the methods `write()` corresponding to the REST `PUT` request but with no body data
+   * `RestNoDataSendable[M]` / `RestNoDataSendableT[M]` which provides the methods `send()` corresponding to the REST `POST` request but with no body data
+   * `RestWithDataReadable[M]` / `RestWithDataReadableUT[M, O]` / `RestWithDataReadableTU[M, O]` / `RestWithDataReadableTT[M, I, O]` which  provides the methods `readS(str)`, `readJ(json)`, and optionally `read(typeObj)` corresponding to the REST `GET` request but with a body
+   * `RestWithDataDeletable[M]` / `RestWithDataDeleableUT[M, O]` / `RestWithDataDeletableTU[M, O]` / `RestWithDataDeletableTT[M, I, O]` which  provides the methods `deleteS(str)`, `deleteJ(json)`, and optionally `delete(typeObj)` corresponding to the REST `DELETE` request but with a body
+
+The type parameters are: `M` for the list of modifiers (see below), `I` for the input type in the optional typed-input cases (mixed-in traits ending in `TU` or `TT`), `O` for the output type in the optional typed-output cases (mixed-in traits ending in just `T`, `UT` or `TT`). More details on the supported `I` and `O` types is provided below.
+
+_(Note that the typed input methods like `write(typeObj)` are provided by implicits (see below) and hence are not in the scaladocs for the resource classes and may not appear in code completion if the implicits are not imported)_
+
+#### Operating on resources
+
+Once one of the supported resource methods (`read`, `writeS` etc) has been called on a resource instance, it becomes an operation. It is important to note that an operation is still just an effectless case class instance, to which one of three transforms can be applied:
+* The operation can be modified using the type parameter `M` described below - this corresponds to URL parameters in HTTP.
+* The operation can have headers added, corresponding to HTTP headers.
+* The operation can be executed.
+
+In order to execute the operation, an implicit of type `XXX` is required, which supports the following operations:
+* `execS(): Future[String]` and `execJ(): Future[J]` - returns a future containing the response
+* `resultS(): Try[String]` and `resultJ(): Try[J]` - blocks until a reply is returned or an optional timeout occurs (in the format eg `resultS(timeout: Duration): Try[String]`) 
+   * (note that the blocking versions are not avaiable in ScalaJS)
+* And in the typed case (resource class ends with a `T`)
+   * `exec(): Future[O]` - returns a future containing the typed response
+   * `result(): Try[O]` - blocks until the typed response is returned or an optional timeout occurs (in the format eg `result(timeout: Duration): Try[O]`) 
+   
+_(Note that the `exec()` and `result()` calls are provided via implicits (see below) and hence are not in the scaladocs for the resource classes and may not appear in code completion if the implicits are not imported)_   
+   
+TODO implicits   
+   
+TODO error types
 
 ### Modifiers
 
