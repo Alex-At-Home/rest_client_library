@@ -6,10 +6,15 @@
 /rest_json_circe_module/target/
 /rest_json_circe_module/js/target/
 /rest_json_circe_module/jvm/target/
+/rest_json_js_module/target/
 /rest_json_circe_module/shared/target/
 /rest_scala_core/target/
 /rest_scala_core/js/target/
 /rest_scala_core/jvm/target/
 /rest_scala_core/shared/target/
+/rest_http_client/target/
+/rest_http_client/js/target/
+/rest_http_client/jvm/target/
+/rest_http_client/shared/target/
 /doc/target/
 /.history
