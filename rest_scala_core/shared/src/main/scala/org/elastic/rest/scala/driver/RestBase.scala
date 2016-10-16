@@ -41,7 +41,7 @@ object RestBase {
     * * `def PARAM_TO_INJECT(x: TYPE_OR_TYPE*): this.type = self.withModifier((CUSTOM_STR, x)).asInstanceOf[this.type]`
     * In the former case then `Modifier.body` is replaced by an auto-generated code block
     */
-  trait Modifier { self: BaseDriverOp => }
+  trait Modifier
 
   /** Static util methods for `Modifier` */
   object Modifier {
@@ -182,13 +182,13 @@ object RestBase {
     def unapply(op: BaseDriverOp) = Some((op.resource, op.op, op.body, op.mods, op.headers))
   }
 
-  /** A trait of `BaseDriverOp` that indicates the typed return type of an operation
+  /** A child of `BaseDriverOp` that includes the typed return type of an operation
     *
     * Various implicits provide `exec` and `result` - see `RuntimeTypedOperation` and eg `StringToTypedHelper`
     *
-    * @tparam T The type of the operation return
+    * @tparam O The type of the operation return
     */
-  trait TypedOperation[T] { self: BaseDriverOp => }
+  trait TypedDriverOp[O] extends BaseDriverOp
 
   /** The base ES resource, all the case classes should be derived from this
     */

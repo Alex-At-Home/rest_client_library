@@ -14,7 +14,7 @@ import scala.language.experimental.macros
 object CirceTypeModule {
 
   /** Typed outputs */
-  implicit class CirceTypedStringToTypeHelper[T](val typedOp: TypedOperation[T]) extends StringToTypedHelper[T] {
+  implicit class CirceTypedStringToTypeHelper[T](val typedOp: TypedDriverOp[T]) extends StringToTypedHelper[T] {
 
     override def exec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] =
       macro MacroUtils.execMaterialize[T]
@@ -25,76 +25,76 @@ object CirceTypeModule {
   // Untyped output:
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataReadableTU[D <: BaseDriverOp, I]
+  implicit class CirceTypedStringToTypeHelperWithDataReadableTU[D <: Modifier, I]
     (val resource: RestWithDataReadableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataReadableTU[D, I]
   {
     @OpType("read")
-    override def read(body: I): D = macro MacroUtils.writeMaterialize[D, I]
+    override def read(body: I): D with BaseDriverOp = macro MacroUtils.writeMaterialize[D, I]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperSendableTU[D <: BaseDriverOp, I]
+  implicit class CirceTypedStringToTypeHelperSendableTU[D <: Modifier, I]
     (val resource: RestSendableTU[D, I] with RestResource)
     extends TypedToStringHelperSendableTU[D, I]
   {
     @OpType("send")
-    override def send(body: I): D = macro MacroUtils.writeMaterialize[D, I]
+    override def send(body: I): D with BaseDriverOp = macro MacroUtils.writeMaterialize[D, I]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWritableTU[D <: BaseDriverOp, I]
+  implicit class CirceTypedStringToTypeHelperWritableTU[D <: Modifier, I]
     (val resource: RestWritableTU[D, I] with RestResource)
     extends TypedToStringHelperWritableTU[D, I]
   {
     @OpType("write")
-    override def write(body: I): D = macro MacroUtils.writeMaterialize[D, I]
+    override def write(body: I): D with BaseDriverOp = macro MacroUtils.writeMaterialize[D, I]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataDeletableTU[D <: BaseDriverOp, I]
+  implicit class CirceTypedStringToTypeHelperWithDataDeletableTU[D <: Modifier, I]
     (val resource: RestWithDataDeletableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataDeletableTU[D, I]
   {
     @OpType("delete")
-    override def delete(body: I): D = macro MacroUtils.writeMaterialize[D, I]
+    override def delete(body: I): D with BaseDriverOp = macro MacroUtils.writeMaterialize[D, I]
   }
 
   // Typed output:
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataReadableTT[D <: BaseDriverOp, I, O]
+  implicit class CirceTypedStringToTypeHelperWithDataReadableTT[D <: Modifier, I, O]
     (val resource: RestWithDataReadableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataReadableTT[D, I, O]
   {
     @OpType("read")
-    override def read(body: I): D with TypedOperation[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
+    override def read(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperSendableTT[D <: BaseDriverOp, I, O]
+  implicit class CirceTypedStringToTypeHelperSendableTT[D <: Modifier, I, O]
     (val resource: RestSendableTT[D, I, O] with RestResource)
     extends TypedToStringHelperSendableTT[D, I, O]
   {
     @OpType("send")
-    override def send(body: I): D with TypedOperation[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
+    override def send(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWritableTT[D <: BaseDriverOp, I, O]
+  implicit class CirceTypedStringToTypeHelperWritableTT[D <: Modifier, I, O]
     (val resource: RestWritableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWritableTT[D, I, O]
   {
     @OpType("write")
-    override def write(body: I): D with TypedOperation[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
+    override def write(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 
   /** Typed input case */
-  implicit class CirceTypedStringToTypeHelperWithDataDeletableTT[D <: BaseDriverOp, I, O]
+  implicit class CirceTypedStringToTypeHelperWithDataDeletableTT[D <: Modifier, I, O]
     (val resource: RestWithDataDeletableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataDeletableTT[D, I, O]
   {
     @OpType("delete")
-    override def delete(body: I): D with TypedOperation[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
+    override def delete(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 }

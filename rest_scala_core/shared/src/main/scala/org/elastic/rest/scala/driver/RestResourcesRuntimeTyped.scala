@@ -1,6 +1,6 @@
 package org.elastic.rest.scala.driver
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, RestResource, TypedOperation}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, RestResource, TypedDriverOp}
 import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.RuntimeTypedToStringHelper
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.utils.MacroUtils
@@ -26,7 +26,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWithDataReadableTU[D <: BaseDriverOp, I](val resource: RestWithDataReadableTU[D, I] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWithDataReadableTU[D <: Modifier, I](val resource: RestWithDataReadableTU[D, I] with RestResource) {
     /** Creates a driver operation
       *
       * (This is the runtime version, it is recommended to use the macro version `TypedToStringHelperWithDataReadableTU`
@@ -36,7 +36,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    def read(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D =
+    def read(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with BaseDriverOp =
       macro MacroUtils.materializeOpImpl_CBody[D, I]
   }
 
@@ -53,7 +53,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWithDataReadableTT[D <: BaseDriverOp, I, O](val resource: RestWithDataReadableTT[D, I, O] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWithDataReadableTT[D <: Modifier, I, O](val resource: RestWithDataReadableTT[D, I, O] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -64,7 +64,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("GET")
-    def read(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedOperation[O] =
+    def read(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedDriverOp[O] =
       macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
   }
 
@@ -81,7 +81,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWritableTU[D <: BaseDriverOp, I](val resource: RestWritableTU[D, I] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWritableTU[D <: Modifier, I](val resource: RestWritableTU[D, I] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -92,7 +92,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    def write(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D =
+    def write(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with BaseDriverOp =
       macro MacroUtils.materializeOpImpl_CBody[D, I]
   }
 
@@ -109,7 +109,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWritableTT[D <: BaseDriverOp, I, O](val resource: RestWritableTT[D, I, O] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWritableTT[D <: Modifier, I, O](val resource: RestWritableTT[D, I, O] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -120,7 +120,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("PUT")
-    def write(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedOperation[O] =
+    def write(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedDriverOp[O] =
       macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
   }
 
@@ -137,7 +137,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperSendableTU[D <: BaseDriverOp, I](val resource: RestSendableTU[D, I] with RestResource) {
+  implicit class RuntimeTypedToStringHelperSendableTU[D <: Modifier, I](val resource: RestSendableTU[D, I] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -148,7 +148,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    def send(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D =
+    def send(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with BaseDriverOp =
       macro MacroUtils.materializeOpImpl_CBody[D, I]
   }
 
@@ -165,7 +165,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperSendableTT[D <: BaseDriverOp, I, O](val resource: RestSendableTT[D, I, O] with RestResource) {
+  implicit class RuntimeTypedToStringHelperSendableTT[D <: Modifier, I, O](val resource: RestSendableTT[D, I, O] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -176,7 +176,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("POST")
-    def send(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedOperation[O] =
+    def send(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedDriverOp[O] =
       macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
   }
 
@@ -193,7 +193,7 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWithDataDeletableTU[D <: BaseDriverOp, I](val resource: RestWithDataDeletableTU[D, I] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWithDataDeletableTU[D <: Modifier, I](val resource: RestWithDataDeletableTU[D, I] with RestResource) {
 
     /** Creates a driver operation
       *
@@ -204,7 +204,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    def delete(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D =
+    def delete(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with BaseDriverOp =
       macro MacroUtils.materializeOpImpl_CBody[D, I]
   }
 
@@ -221,7 +221,9 @@ object RestResourcesRuntimeTyped {
     *
     * @param resource The underlying resource that this implicit is wrapping
     */
-  implicit class RuntimeTypedToStringHelperWithDataDeletableTT[D <: BaseDriverOp, I, O](val resource: RestWithDataDeletableTT[D, I, O] with RestResource) {
+  implicit class RuntimeTypedToStringHelperWithDataDeletableTT[D <: Modifier, I, O]
+    (val resource: RestWithDataDeletableTT[D, I, O] with RestResource)
+  {
 
     /** Creates a driver operation
       *
@@ -232,7 +234,7 @@ object RestResourcesRuntimeTyped {
       * @return The driver operation
       */
     @MacroUtils.OpType("DELETE")
-    def delete(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedOperation[O] =
+    def delete(body: I)(implicit typeToStringHelper: RuntimeTypedToStringHelper): D with TypedDriverOp[O] =
       macro MacroUtils.materializeOpImpl_CBody_TypedOutput[D, I, O]
   }
 }

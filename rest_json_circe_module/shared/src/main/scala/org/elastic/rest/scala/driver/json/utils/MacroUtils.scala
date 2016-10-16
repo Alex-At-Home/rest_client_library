@@ -1,7 +1,7 @@
 package org.elastic.rest.scala.driver.json.utils
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, RestDriver, TypedOperation}
-import org.elastic.rest.scala.driver.RestBaseImplicits.{CustomTypedToString, CustomStringToTyped}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, RestDriver, TypedDriverOp}
+import org.elastic.rest.scala.driver.RestBaseImplicits.{CustomStringToTyped, CustomTypedToString}
 import org.elastic.rest.scala.driver.utils.MacroUtils.getOpType
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -67,10 +67,10 @@ object MacroUtils {
     * @tparam I The input type
     * @return The operated resource
     */
-  def writeMaterialize[D <: BaseDriverOp, I]
+  def writeMaterialize[D <: Modifier, I]
     (c: blackbox.Context)(body: c.Expr[I])
     (implicit ctd: c.WeakTypeTag[D], cti: c.WeakTypeTag[I])
-    : c.Expr[D] =
+    : c.Expr[D with BaseDriverOp] =
   {
     import c.universe._
 
@@ -93,7 +93,7 @@ object MacroUtils {
          """
       }
 
-    c.Expr[D] {
+    c.Expr[D with BaseDriverOp] {
       opType match {
         case "get" | "read" => q""" ..$q1
              val typedResource = $self.resource.asInstanceOf[RestWithDataReadable[$ctd] with RestResource]
@@ -128,10 +128,10 @@ object MacroUtils {
     * @tparam I The input type
     * @return The operated resource
     */
-  def writeTypedOutputMaterialize[D <: BaseDriverOp, I, O]
+  def writeTypedOutputMaterialize[D <: Modifier, I, O]
     (c: blackbox.Context)(body: c.Expr[I])
     (implicit ctd: c.WeakTypeTag[D], cti: c.WeakTypeTag[I], cto: c.WeakTypeTag[O])
-    : c.Expr[D with TypedOperation[O]] =
+    : c.Expr[D with TypedDriverOp[O]] =
   {
     import c.universe._
 
@@ -154,7 +154,7 @@ object MacroUtils {
          """
       }
 
-    c.Expr[D with TypedOperation[O]] {
+    c.Expr[D with TypedDriverOp[O]] {
       opType match {
         case "get" | "read" => q""" ..$q1
              val typedResource = $self.resource.asInstanceOf[RestWithDataReadableTT[$ctd, $cti, $cto] with RestResource]

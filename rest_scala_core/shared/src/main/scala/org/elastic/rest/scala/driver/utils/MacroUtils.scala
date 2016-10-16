@@ -1,6 +1,6 @@
 package org.elastic.rest.scala.driver.utils
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, TypedOperation}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, TypedDriverOp}
 import org.elastic.rest.scala.driver.RestBaseImplicits.JsonToStringHelper
 import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.RuntimeTypedToStringHelper
 import org.elastic.rest.scala.driver.RestBaseImplicits._
@@ -99,7 +99,7 @@ object MacroUtils {
     q"""
       case class Internal
       (resource: RestResource, op: String, body: Option[String], mods: List[(String, Any)], headers: List[String])
-        extends $ctt with TypedOperation[$cto]
+        extends $ctt with TypedDriverOp[$cto]
       {
         override def withModifier(kv: (String, Any)): this.type = Internal(resource, op, body, kv :: mods, headers)
           .asInstanceOf[this.type]
@@ -133,7 +133,7 @@ object MacroUtils {
     q"""
       case class Internal
       (resource: RestResource, op: String, body: Option[String], mods: List[(String, Any)], headers: List[String])
-        extends $ctt
+        extends $ctt with BaseDriverOp
       {
         override def withModifier(kv: (String, Any)): this.type = Internal(resource, op, body, kv :: mods, headers)
           .asInstanceOf[this.type]
@@ -154,17 +154,17 @@ object MacroUtils {
     * @tparam T The type (combination of `Modifier` classes and `BaseDriverOp`)
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl[T <: BaseDriverOp]
+  def materializeOpImpl[T <: Modifier]
     (c: blackbox.Context)()
     (implicit ct: c.WeakTypeTag[T])
-    : c.Expr[T] =
+    : c.Expr[T with BaseDriverOp] =
   {
     import c.universe._
 
     val opType = getOpType(c)
     val self = c.prefix
 
-    c.Expr[T] {
+    c.Expr[T with BaseDriverOp] {
       buildInternalClass[T](c)(self, opType, reify { None }, List(), List(), ct).asInstanceOf[c.Tree]
     }
   }
@@ -181,17 +181,17 @@ object MacroUtils {
     * @tparam O The output type (combination of `Modifier` classes and `BaseDriverOp`)
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_TypedOutput[T <: BaseDriverOp, O]
+  def materializeOpImpl_TypedOutput[T <: Modifier, O]
   (c: blackbox.Context)()
   (implicit ctt: c.WeakTypeTag[T], cto: c.WeakTypeTag[O])
-  : c.Expr[T with TypedOperation[O]] =
+  : c.Expr[T with TypedDriverOp[O]] =
   {
     import c.universe._
 
     val opType = getOpType(c)
     val self = c.prefix
 
-    c.Expr[T with TypedOperation[O]] {
+    c.Expr[T with TypedDriverOp[O]] {
       buildInternalClass[T, O](c)(self, opType, reify { None }, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
@@ -208,11 +208,11 @@ object MacroUtils {
     * @tparam T The type (combination of `Modifier` classes and `BaseDriverOp`)
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_JBody[T <: BaseDriverOp, J]
+  def materializeOpImpl_JBody[T <: Modifier, J]
     (c: blackbox.Context)(body: c.Expr[J])
     (jsonToStringHelper: c.Expr[JsonToStringHelper[J]])
     (implicit ct: c.WeakTypeTag[T])
-    : c.Expr[T] =
+    : c.Expr[T with BaseDriverOp] =
   {
     import c.universe._
 
@@ -220,7 +220,7 @@ object MacroUtils {
     val self = c.prefix
     val maybeBody = reify { Option(jsonToStringHelper.splice.fromJson(body.splice)) }
 
-    c.Expr[T] {
+    c.Expr[T with BaseDriverOp] {
       buildInternalClass[T](c)(self, opType, maybeBody, List(), List(), ct)
         .asInstanceOf[c.Tree]
     }
@@ -238,11 +238,11 @@ object MacroUtils {
     * @tparam O The output type (combination of `Modifier` classes and `BaseDriverOp`)
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_JBody_TypedOutput[T <: BaseDriverOp, J, O]
+  def materializeOpImpl_JBody_TypedOutput[T <: Modifier, J, O]
   (c: blackbox.Context)(body: c.Expr[J])
   (jsonToStringHelper: c.Expr[JsonToStringHelper[J]])
   (implicit ctt: c.WeakTypeTag[T], cto: c.WeakTypeTag[O])
-  : c.Expr[T with TypedOperation[O]] =
+  : c.Expr[T with TypedDriverOp[O]] =
   {
     import c.universe._
 
@@ -250,7 +250,7 @@ object MacroUtils {
     val self = c.prefix
     val maybeBody = reify { Option(jsonToStringHelper.splice.fromJson(body.splice)) }
 
-    c.Expr[T with TypedOperation[O]] {
+    c.Expr[T with TypedDriverOp[O]] {
       buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
@@ -269,11 +269,11 @@ object MacroUtils {
     * @tparam C The input type
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_CBody[T <: BaseDriverOp, C]
+  def materializeOpImpl_CBody[T <: Modifier, C]
   (c: blackbox.Context)(body: c.Expr[C])
   (typeToStringHelper: c.Expr[RuntimeTypedToStringHelper])
   (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C])
-  : c.Expr[T] =
+  : c.Expr[T with BaseDriverOp] =
   {
     import c.universe._
 
@@ -286,7 +286,7 @@ object MacroUtils {
       else
         c.Expr[Option[String]] { q"Some($body.fromTyped)" }
 
-    c.Expr[T] {
+    c.Expr[T with BaseDriverOp] {
       buildInternalClass[T](c)(resource, opType, maybeBody, List(), List(), ctt)
         .asInstanceOf[c.Tree]
     }
@@ -306,12 +306,12 @@ object MacroUtils {
     * @tparam C The input type
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_CBodyCustom[T <: BaseDriverOp, C <: CustomTypedToString]
+  def materializeOpImpl_CBodyCustom[T <: Modifier, C <: CustomTypedToString]
     (c: blackbox.Context)(body: c.Expr[C])
     (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C])
-    : c.Expr[T] =
+    : c.Expr[T with BaseDriverOp] =
   {
-    materializeOpImpl_CBody[T, C](c)(body)(null)(ctt, ctc).asInstanceOf[c.Expr[T]]
+    materializeOpImpl_CBody[T, C](c)(body)(null)(ctt, ctc).asInstanceOf[c.Expr[T with BaseDriverOp]]
   }
 
   /**
@@ -329,11 +329,11 @@ object MacroUtils {
     * @tparam O The output type
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_CBody_TypedOutput[T <: BaseDriverOp, C, O]
+  def materializeOpImpl_CBody_TypedOutput[T <: Modifier, C, O]
     (c: blackbox.Context)(body: c.Expr[C])
     (typeToStringHelper: c.Expr[RuntimeTypedToStringHelper])
     (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C], cto: c.WeakTypeTag[O])
-    : c.Expr[T] =
+    : c.Expr[T with TypedDriverOp[O]] =
   {
     import c.universe._
 
@@ -346,7 +346,7 @@ object MacroUtils {
       else
         c.Expr[Option[String]] { q"Some($body.fromTyped)" }
 
-    c.Expr[T with TypedOperation[O]] {
+    c.Expr[T with TypedDriverOp[O]] {
       buildInternalClass[T, O](c)(resource, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }
@@ -368,12 +368,12 @@ object MacroUtils {
     * @tparam O The output type
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_CBodyCustom_TypedOutput[T <: BaseDriverOp, C <: CustomTypedToString, O]
+  def materializeOpImpl_CBodyCustom_TypedOutput[T <: Modifier, C <: CustomTypedToString, O]
     (c: blackbox.Context)(body: c.Expr[C])
     (implicit ctt: c.WeakTypeTag[T], ctc: c.WeakTypeTag[C], cto: c.WeakTypeTag[O])
-    : c.Expr[T] =
+    : c.Expr[T with BaseDriverOp] =
   {
-    materializeOpImpl_CBody_TypedOutput[T, C, O](c)(body)(null)(ctt, ctc, cto).asInstanceOf[c.Expr[T]]
+    materializeOpImpl_CBody_TypedOutput[T, C, O](c)(body)(null)(ctt, ctc, cto).asInstanceOf[c.Expr[T with BaseDriverOp]]
   }
   /**
     * The Macro implementation, allows for modifiers to be chained
@@ -386,10 +386,10 @@ object MacroUtils {
     * @tparam T The type (combination of `Modifier` classes and `BaseDriverOp`)
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_Body[T <: BaseDriverOp]
+  def materializeOpImpl_Body[T <: Modifier]
     (c: blackbox.Context)(body: c.Expr[String])
     (implicit ctt: c.WeakTypeTag[T])
-    : c.Expr[T] =
+    : c.Expr[T with BaseDriverOp] =
   {
     import c.universe._
 
@@ -397,7 +397,7 @@ object MacroUtils {
     val self = c.prefix
     val maybeBody = reify { Option(body.splice) }
 
-    c.Expr[T] {
+    c.Expr[T with BaseDriverOp] {
       buildInternalClass[T](c)(self, opType, maybeBody, List(), List(), ctt)
         .asInstanceOf[c.Tree]
     }
@@ -416,10 +416,10 @@ object MacroUtils {
     * @tparam O The output type
     * @return A chainable version of the `BaseDriverOp` mixed with T
     */
-  def materializeOpImpl_Body_TypedOutput[T <: BaseDriverOp, O]
+  def materializeOpImpl_Body_TypedOutput[T <: Modifier, O]
   (c: blackbox.Context)(body: c.Expr[String])
   (implicit ctt: c.WeakTypeTag[T], cto: c.WeakTypeTag[O])
-  : c.Expr[T] =
+  : c.Expr[T with TypedDriverOp[O]] =
   {
     import c.universe._
 
@@ -427,7 +427,7 @@ object MacroUtils {
     val self = c.prefix
     val maybeBody = reify { Option(body.splice) }
 
-    c.Expr[T] {
+    c.Expr[T with TypedDriverOp[O]] {
       buildInternalClass[T, O](c)(self, opType, maybeBody, List(), List(), ctt, cto)
         .asInstanceOf[c.Tree]
     }

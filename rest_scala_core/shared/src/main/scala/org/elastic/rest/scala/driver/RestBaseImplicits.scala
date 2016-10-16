@@ -96,7 +96,7 @@ object RestBaseImplicits {
     */
   trait StringToTypedHelper[T] {
     /** The typed operation the implicit encloses */
-    val typedOp: TypedOperation[T]
+    val typedOp: TypedDriverOp[T]
 
     /** Actually executes the operation (aysnc)
       *
@@ -129,7 +129,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWithDataReadableTU[D <: BaseDriverOp, I] {
+  trait TypedToStringHelperWithDataReadableTU[D <: Modifier, I] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWithDataReadableTU[D, I] with RestResource
 
@@ -138,7 +138,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def read(body: I): D = EmptyBody[D]
+    def read(body: I): D with BaseDriverOp = EmptyBody[D with BaseDriverOp]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -149,7 +149,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWithDataReadableTT[D <: BaseDriverOp, I, O] {
+  trait TypedToStringHelperWithDataReadableTT[D <: Modifier, I, O] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWithDataReadableTT[D, I, O] with RestResource
 
@@ -158,7 +158,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def read(body: I): D with TypedOperation[O] = EmptyBody[D with TypedOperation[O]]
+    def read(body: I): D with TypedDriverOp[O] = EmptyBody[D with TypedDriverOp[O]]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -169,7 +169,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWritableTU[D <: BaseDriverOp, I] {
+  trait TypedToStringHelperWritableTU[D <: Modifier, I] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWritableTU[D, I] with RestResource
 
@@ -178,7 +178,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def write(body: I): D = EmptyBody[D]
+    def write(body: I): D with BaseDriverOp = EmptyBody[D with BaseDriverOp]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -189,7 +189,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWritableTT[D <: BaseDriverOp, I, O] {
+  trait TypedToStringHelperWritableTT[D <: Modifier, I, O] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWritableTT[D, I, O] with RestResource
 
@@ -198,7 +198,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def write(body: I): D with TypedOperation[O] = EmptyBody[D with TypedOperation[O]]
+    def write(body: I): D with TypedDriverOp[O] = EmptyBody[D with TypedDriverOp[O]]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -209,7 +209,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperSendableTU[D <: BaseDriverOp, I] {
+  trait TypedToStringHelperSendableTU[D <: Modifier, I] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestSendableTU[D, I] with RestResource
 
@@ -218,7 +218,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def send(body: I): D = EmptyBody[D]
+    def send(body: I): D with BaseDriverOp = EmptyBody[D with BaseDriverOp]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -229,7 +229,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperSendableTT[D <: BaseDriverOp, I, O] {
+  trait TypedToStringHelperSendableTT[D <: Modifier, I, O] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestSendableTT[D, I, O] with RestResource
 
@@ -238,7 +238,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def send(body: I): D with TypedOperation[O] = EmptyBody[D with TypedOperation[O]]
+    def send(body: I): D with TypedDriverOp[O] = EmptyBody[D with TypedDriverOp[O]]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -249,7 +249,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWithDataDeletableTU[D <: BaseDriverOp, I] {
+  trait TypedToStringHelperWithDataDeletableTU[D <: Modifier, I] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWithDataDeletableTU[D, I] with RestResource
 
@@ -258,7 +258,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def delete(body: I): D = EmptyBody[D]
+    def delete(body: I): D with BaseDriverOp = EmptyBody[D with BaseDriverOp]
   }
 
   /** A trait to be implemented and used as an implicit to indicate how to go from a
@@ -269,7 +269,7 @@ object RestBaseImplicits {
     *
     * One of these implicits is required for each possible operation-with-body
     */
-  trait TypedToStringHelperWithDataDeletableTT[D <: BaseDriverOp, I, O] {
+  trait TypedToStringHelperWithDataDeletableTT[D <: Modifier, I, O] {
     /** The underlying resource that this implicit is wrapping */
     val resource: RestWithDataDeletableTT[D, I, O] with RestResource
 
@@ -278,7 +278,7 @@ object RestBaseImplicits {
       * @param body The typed body to apply on execution
       * @return An executable operation
       */
-    def delete(body: I): D with TypedOperation[O] = EmptyBody[D with TypedOperation[O]]
+    def delete(body: I): D with TypedDriverOp[O] = EmptyBody[D with TypedDriverOp[O]]
   }
 
   /** Placeholder because macros can't override abstract methods */
