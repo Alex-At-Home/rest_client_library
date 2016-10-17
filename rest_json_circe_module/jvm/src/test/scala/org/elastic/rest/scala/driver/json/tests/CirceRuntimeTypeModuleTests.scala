@@ -108,18 +108,18 @@ trait TestRuntimeDataModelComponent {
   */
 object TestApiRuntimeTyped extends TestApiRuntimeTypedExtensions {
   case class `/typed`()
-    extends RestReadableT[BaseDriverOp, TestRuntimeDataModel.TestRead]
-      with RestWritableTU[BaseDriverOp, TestRuntimeDataModel.TestWrite]
+    extends RestReadableT[Modifier, TestRuntimeDataModel.TestRead]
+      with RestWritableTU[Modifier, TestRuntimeDataModel.TestWrite]
       with RestResource
 }
 trait TestApiRuntimeTypedExtensions {
   case class `/data_model`()
-    extends RestReadableT[BaseDriverOp, TestRuntimeDataModel.OtherTestRead]
-      with RestWritableTU[BaseDriverOp, TestRuntimeDataModel.OtherTestWrite]
+    extends RestReadableT[Modifier, TestRuntimeDataModel.OtherTestRead]
+      with RestWritableTU[Modifier, TestRuntimeDataModel.OtherTestWrite]
       with RestResource
 
   case class `/custom_typed`()
-    extends RestReadableT[BaseDriverOp, TestRuntimeDataModel.TestWrapperRead]
-      with RestWritableTU[BaseDriverOp, TestRuntimeDataModel.TestWrapperWrite]
+    extends RestReadableT[Modifier, TestRuntimeDataModel.TestWrapperRead]
+      with RestWritableTU[Modifier, TestRuntimeDataModel.TestWrapperWrite]
       with RestResource
 }

@@ -10,7 +10,7 @@ import scala.reflect.runtime.universe
 
 object RestResourcesTypedTests extends TestSuite {
 
-  def checkOutputType[T](op: TypedOperation[T])(implicit ct: universe.WeakTypeTag[T]): Boolean =
+  def checkOutputType[T](op: TypedDriverOp[T])(implicit ct: universe.WeakTypeTag[T]): Boolean =
     ct.tpe =:= universe.typeOf[OutWrapper]
 
   val tests = this {

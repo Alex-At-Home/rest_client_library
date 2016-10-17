@@ -1,6 +1,6 @@
 package org.elastic.rest.scala.driver
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, RestDriver, TypedOperation}
+import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, RestDriver, TypedDriverOp}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
@@ -57,7 +57,7 @@ object RestBaseRuntimeTyped {
     *
     * @tparam T The type of the operation return
     */
-  implicit class RuntimeTypedOperation[T](typedOp: TypedOperation[T] with BaseDriverOp) {
+  implicit class RuntimeTypedOperation[T](typedOp: TypedDriverOp[T] with BaseDriverOp) {
 
     /** Actually executes the operation (aysnc)
       *

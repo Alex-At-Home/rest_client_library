@@ -35,7 +35,7 @@ object SampleResources {
   // API Model
 
   /** No modifiers are supported for these parameters */
-  trait NoParams extends BaseDriverOp
+  trait NoParams extends Modifier
 
   /** Read-only root URI
     */

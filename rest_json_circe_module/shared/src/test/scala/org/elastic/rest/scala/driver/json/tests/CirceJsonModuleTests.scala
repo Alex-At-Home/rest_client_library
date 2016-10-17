@@ -43,7 +43,7 @@ object CirceJsonModuleTests extends TestSuite {
   */
 object TestApiUntyped {
   case class `/`()
-    extends RestReadable[BaseDriverOp]
-    with RestWritable[BaseDriverOp]
+    extends RestReadable[Modifier]
+    with RestWritable[Modifier]
     with RestResource
 }
