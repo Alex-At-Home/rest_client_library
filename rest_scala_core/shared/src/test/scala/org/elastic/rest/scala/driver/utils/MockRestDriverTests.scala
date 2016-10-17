@@ -1,4 +1,4 @@
-package org.elastic.rest.scala.driver.util
+package org.elastic.rest.scala.driver.utils
 
 import org.elastic.rest.scala.driver.test_utils.SampleResources._
 import org.elastic.rest.scala.driver.RestBase._
