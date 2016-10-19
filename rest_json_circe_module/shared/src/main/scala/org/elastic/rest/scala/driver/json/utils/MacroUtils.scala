@@ -4,8 +4,10 @@ import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, RestDrive
 import org.elastic.rest.scala.driver.RestBaseImplicits.{CustomStringToTyped, CustomTypedToString}
 import org.elastic.rest.scala.driver.utils.MacroUtils.getOpType
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.macros.blackbox
+import scala.util.Try
 
 /**
   * Utilities to handle typed APIs via CIRCE
@@ -53,6 +55,74 @@ object MacroUtils {
             .map(s => decode[$ct](s).fold(e => throw new Exception(e.toString), v => v))
           """
       }
+    }
+  }
+
+  /** Executes a typed operation using the provided driver
+    *
+    * @param c The macro context
+    * @param driver The driver that actually execute the request
+    * @param ec The execution context
+    * @param ct The class tag for the output type
+    * @tparam T The output type
+    * @return A future containing the typed result
+    */
+  def resultMaterializeNoTimeout[T]
+    (c: blackbox.Context)
+    ()
+    (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext])
+    (implicit ct: c.WeakTypeTag[T])
+    : c.Expr[Try[T]] =
+  {
+    import c.universe._
+
+    val timeoutOrDefault = reify { driver.splice.timeout }
+    resultMaterialize[T](c)(timeoutOrDefault)(driver, ec)(ct).asInstanceOf[c.Expr[scala.util.Try[T]]]
+  }
+
+  /** Executes a typed operation using the provided driver
+    *
+    * @param c The macro context
+    * @param driver The driver that actually execute the request
+    * @param ec The execution context
+    * @param ct The class tag for the output type
+    * @tparam T The output type
+    * @return A future containing the typed result
+    */
+  def resultMaterialize[T]
+    (c: blackbox.Context)
+    (timeout: c.Expr[Duration])
+    (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext])
+    (implicit ct: c.WeakTypeTag[T])
+    : c.Expr[Try[T]] =
+  {
+    import c.universe._
+
+    val self = c.prefix
+
+    val q1 = q"""
+          import org.elastic.rest.scala.driver.RestBase.BaseDriverOp
+          import scala.concurrent.{Await, ExecutionContext, Future}
+        """
+
+    val q2 = if (ct.tpe <:< typeOf[CustomStringToTyped]) { // (has a single constructor taking a string)
+      q"""..$q1
+        val exec = $driver.exec($self.typedOp.asInstanceOf[BaseDriverOp])
+          .map(s => new $ct(s))
+        """
+    }
+    else {
+      q"""..$q1
+        import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
+
+        val exec = $driver.exec($self.typedOp.asInstanceOf[BaseDriverOp])
+          .map(s => decode[$ct](s).fold(e => throw new Exception(e.toString), v => v))
+        """
+    }
+    c.Expr[scala.util.Try[T]] {
+      q"""..$q2
+        scala.util.Try { Await.result(exec, Option($timeout).getOrElse($driver.timeout)) }
+       """
     }
   }
 

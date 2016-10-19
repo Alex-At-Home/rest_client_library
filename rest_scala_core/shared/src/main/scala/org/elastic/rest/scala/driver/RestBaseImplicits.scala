@@ -115,8 +115,7 @@ object RestBaseImplicits {
       * @param ec The execution context for futures
       * @return The result of the operation as a type
       */
-    def result(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      Try { Await.result(this.exec(), Option(timeout).getOrElse(driver.timeout)) }
+    def result(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] = EmptyBody
   }
 
   // Typed input
