@@ -4,6 +4,13 @@ scala:
 jdk:
         - oraclejdk8
 
+env:
+  - scala_projects="rest_scala_coreJS/test rest_json_circe_moduleJS/test" \
+    after="echo NO_COVERAGE"
+  - scala_projects="rest_scala_coreJVM/clean rest_scala_coreJVM/coverage rest_scala_coreJVM/test rest_json_circe_moduleJVM/clean rest_json_circe_moduleJVM/coverage rest_json_circe_moduleJVM/test" \
+    after="sbt coverageReport coveralls"
+
+
 script: sbt ++$TRAVIS_SCALA_VERSION clean coverage test
-after_success: "sbt coverageReport coveralls"
+after_success: $after
 
