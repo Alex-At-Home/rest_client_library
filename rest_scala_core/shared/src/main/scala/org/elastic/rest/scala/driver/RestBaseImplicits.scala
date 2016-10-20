@@ -5,6 +5,7 @@ import org.elastic.rest.scala.driver.RestResources._
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /** A container for the base classes that are used
@@ -104,9 +105,11 @@ object RestBaseImplicits {
       *
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
+      * @param ct The evidence for the output sub-type
       * @return A future containing the result of the operation as a type
       */
-    def exec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] = EmptyBody
+    def exec[O <: T]
+      ()(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Future[O] = EmptyBody
 
     /** Actually executes the operation (sync)
       * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
@@ -115,9 +118,11 @@ object RestBaseImplicits {
       * @param timeout Optionally, the amount of time to wait before failing
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
+      * @param ct The evidence for the output sub-type
       * @return The result of the operation as a type
       */
-    def result(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] = EmptyBody
+    def result[O <: T]
+      (timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Try[T] = EmptyBody
   }
 
   // Typed input

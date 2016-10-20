@@ -9,6 +9,7 @@ import org.elastic.rest.scala.driver.utils.MacroUtils.OpType
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /** Integration for CIRCE with REST drivers - handles typed APIs
@@ -18,11 +19,17 @@ object CirceTypeModule {
   /** Typed outputs */
   implicit class CirceTypedStringToTypeHelper[T](val typedOp: TypedDriverOp[T]) extends StringToTypedHelper[T] {
 
-    override def exec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] =
-      macro MacroUtils.execMaterialize[T]
+    //TODO: use a class tag to allow this implicit to return the CIRCE specific version of a generic output
+    // Then the actual REST service has a list of traits for the output types, but the implicit figures out
+    // which _actual_ class to use
 
-    override def result(timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      macro MacroUtils.resultMaterialize[T]
+    override def exec[O <: T]
+      ()(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Future[O] =
+        macro MacroUtils.execMaterialize[O]
+
+    override def result[O <: T]
+      (timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Try[O] =
+        macro MacroUtils.resultMaterialize[O]
 
     /** Actually executes the operation (sync), with default timeout
       * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
