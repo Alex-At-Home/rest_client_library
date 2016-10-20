@@ -8,8 +8,7 @@ env:
   - scala_projects="rest_scala_coreJS/test rest_http_clientJS/test rest_json_circe_moduleJS/test"
     after="echo NO_COVERAGE"
   - scala_projects="clean coverage rest_scala_coreJVM/test rest_http_clientJVM/test rest_json_circe_moduleJVM/test"
-    after="sbt coverageReport coveralls"
-
+    after="sbt coverageReport coverageAggregate coveralls"
 
 script: sbt ++$TRAVIS_SCALA_VERSION $scala_projects
 after_success: $after
