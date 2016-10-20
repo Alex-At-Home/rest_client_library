@@ -79,6 +79,8 @@ object RestBaseImplicits {
     */
   trait CustomStringToTyped
 
+  // $COVERAGE-OFF$The remainder of these are actually abstract but have null bodies to workaround a macro limitation
+
   // Typed (common between JS and JVM)
 
   // Typed output
@@ -284,5 +286,7 @@ object RestBaseImplicits {
   private val EmptyBody = null
 
   /** Placeholder because macros can't override abstract methods */
-  private def EmptyBody[T] =null.asInstanceOf[T]
+  private def EmptyBody[T] = null.asInstanceOf[T]
+
+  // $COVERAGE-ON
 }

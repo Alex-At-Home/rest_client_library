@@ -1,4 +1,4 @@
-# Scala REST driver   [![Build Status](https://travis-ci.org/Alex-At-Home/rest_client_library.svg?branch=master)](https://travis-ci.org/Alex-At-Home/rest_client_library)
+# Scala REST driver   [![Build Status](https://travis-ci.org/Alex-At-Home/rest_client_library.svg?branch=master)](https://travis-ci.org/Alex-At-Home/rest_client_library) [![Coverage Status](https://coveralls.io/repos/github/Alex-At-Home/rest_client_library/badge.svg?branch=master)](https://coveralls.io/github/Alex-At-Home/rest_client_library?branch=master) [![Scala.js](http://scala-js.org/assets/badges/scalajs-0.6.8.svg)](http://scala-js.org)
 
 ## Overview
 
