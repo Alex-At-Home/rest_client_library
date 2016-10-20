@@ -7,6 +7,8 @@ import org.elastic.rest.scala.driver.RestResources._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+// $COVERAGE-OFF$This is test code included here purely to allow x-project test artefact sharing
+
 /**
   * Useful sample REST resources for testing
   */
@@ -105,3 +107,5 @@ object SampleResources {
     override lazy val location = uri
   }
 }
+
+// $COVERAGE-ON$

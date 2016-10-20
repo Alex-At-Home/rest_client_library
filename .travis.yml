@@ -11,5 +11,6 @@ env:
     after="sbt coverageReport coverageAggregate coveralls"
 
 script: sbt ++$TRAVIS_SCALA_VERSION $scala_projects
+
 after_success: $after
 

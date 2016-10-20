@@ -5,6 +5,7 @@ import org.elastic.rest.scala.driver.test_utils.SampleResources.{InWrapper, OutW
 
 import scala.reflect.runtime.universe
 
+// $COVERAGE-OFF$This is test code included here purely to allow x-project test artefact sharing
 /**
   * Useful sample REST resources for testing
   */
@@ -20,3 +21,4 @@ object SampleResourcesTyped {
       OutWrapper(s).asInstanceOf[T]
   }
 }
+// $COVERAGE-ON$

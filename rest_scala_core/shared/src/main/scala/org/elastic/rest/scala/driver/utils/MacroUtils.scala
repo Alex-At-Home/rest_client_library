@@ -8,6 +8,8 @@ import org.elastic.rest.scala.driver.RestBaseImplicits._
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros._
 
+// $COVERAGE-OFF$Macro coverage seems broken
+
 /**
   * Contains scala macros
   */
@@ -433,3 +435,5 @@ object MacroUtils {
     }
   }
 }
+
+// $COVERAGE-ON$
