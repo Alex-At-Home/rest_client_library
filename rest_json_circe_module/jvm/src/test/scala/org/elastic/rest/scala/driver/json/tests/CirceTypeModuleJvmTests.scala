@@ -18,6 +18,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
+/** Register all concrete output types here, note has to be at the top of the file */
+object JvmConcreteTypes {
+  implicit val RegisterTestRead = new RegisterType[JvmTestDataModel.TestRead] {}
+  implicit val RegisterTestWrapperRead = new RegisterType[JvmTestDataModel.TestWrapperRead] {}
+}
 object CirceTypeModuleJvmTests extends TestSuite {
 
   val tests = this {
@@ -38,12 +43,14 @@ object CirceTypeModuleJvmTests extends TestSuite {
 
     "Test macro version of typed (read)" - {
       implicit val mockDriver = new MockRestDriver(macroHandler)
+      import JvmConcreteTypes._
 
-      JvmTestApiTyped.`/typed`().read().result().get ==>  JvmTestDataModel.TestRead("get")
+      JvmTestApiTyped.`/typed`().read().result().get ==> JvmTestDataModel.TestRead("get")
     }
     "Test custom typed extensions (read)" - {
       implicit val mockDriver = new MockRestDriver(customHandler)
       val timeout = Duration(10, TimeUnit.SECONDS)
+      import JvmConcreteTypes._
 
       JvmTestApiTyped.`/custom_typed`().read().result(timeout).get ==> JvmTestDataModel.TestWrapperRead(
         """{ "testRead": "get" }""")

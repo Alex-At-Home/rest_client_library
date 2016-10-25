@@ -15,6 +15,11 @@ import utest._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+/** Register all concrete output types here, note has to be at the top of the file */
+object ConcreteTypes {
+  implicit val RegisterTestRead = new RegisterType[TestDataModel.TestRead] {}
+  implicit val RegisterTestWrapperRead = new RegisterType[TestDataModel.TestWrapperRead] {}
+}
 object CirceTypeModuleTests extends TestSuite {
 
   val tests = this {
@@ -41,6 +46,7 @@ object CirceTypeModuleTests extends TestSuite {
 
     "Test macro version of typed (read)" - {
       implicit val mockDriver = new MockRestDriver(macroHandler)
+      import ConcreteTypes._
 
       TestApiTyped.`/typed`().read().exec().map { result =>
         result ==>  TestDataModel.TestRead("get")
@@ -55,6 +61,7 @@ object CirceTypeModuleTests extends TestSuite {
     }
     "Test custom typed extensions (read)" - {
       implicit val mockDriver = new MockRestDriver(customHandler)
+      import ConcreteTypes._
 
       TestApiTyped.`/custom_typed`().read().exec().map { result =>
         result ==> TestDataModel.TestWrapperRead("""{ "testRead": "get" }""")

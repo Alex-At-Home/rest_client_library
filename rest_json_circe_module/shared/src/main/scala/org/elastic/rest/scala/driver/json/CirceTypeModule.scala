@@ -23,13 +23,18 @@ object CirceTypeModule {
     // Then the actual REST service has a list of traits for the output types, but the implicit figures out
     // which _actual_ class to use
 
+    //TODO: what I really want is something like
+    // ReadableT[OutputTrait]
+    // case class ConcreteOutput
+    // implicit class OutputTrait_2_ConcreteOutput
+
     override def exec[O <: T]
-      ()(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Future[O] =
-        macro MacroUtils.execMaterialize[O]
+      ()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Future[O] =
+        macro MacroUtils.execMaterialize[T]
 
     override def result[O <: T]
-      (timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Try[O] =
-        macro MacroUtils.resultMaterialize[O]
+      (timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[O] =
+        macro MacroUtils.resultMaterialize[T]
 
     /** Actually executes the operation (sync), with default timeout
       * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
@@ -39,8 +44,8 @@ object CirceTypeModule {
       * @param ec The execution context for futures
       * @return The result of the operation as a type
       */
-    def result()(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      macro MacroUtils.resultMaterializeNoTimeout[T]
+    def result[O <: T]()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[O] =
+      macro MacroUtils.resultMaterializeNoTimeout[O]
   }
 
   // Lots of classes for the different typed inputs cases

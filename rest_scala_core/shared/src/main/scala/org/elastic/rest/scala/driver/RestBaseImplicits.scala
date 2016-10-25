@@ -86,6 +86,9 @@ object RestBaseImplicits {
 
   // Typed output
 
+  //TODO
+  trait RegisterType[T]
+
   /** A trait to be implemented and used as an implicit to define how to go from a typed object
     * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
     *
@@ -105,11 +108,11 @@ object RestBaseImplicits {
       *
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
-      * @param ct The evidence for the output sub-type
+      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
       * @return A future containing the result of the operation as a type
       */
     def exec[O <: T]
-      ()(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Future[O] = EmptyBody
+      ()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Future[T] = EmptyBody
 
     /** Actually executes the operation (sync)
       * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
@@ -118,11 +121,11 @@ object RestBaseImplicits {
       * @param timeout Optionally, the amount of time to wait before failing
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
-      * @param ct The evidence for the output sub-type
+      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
       * @return The result of the operation as a type
       */
     def result[O <: T]
-      (timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext, ct: ClassTag[O]): Try[T] = EmptyBody
+      (timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[T] = EmptyBody
   }
 
   // Typed input
