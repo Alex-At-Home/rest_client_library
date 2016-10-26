@@ -435,5 +435,3 @@ object MacroUtils {
     }
   }
 }
-
-// $COVERAGE-ON$

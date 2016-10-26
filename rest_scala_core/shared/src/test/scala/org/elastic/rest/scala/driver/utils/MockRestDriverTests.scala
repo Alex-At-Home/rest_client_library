@@ -4,7 +4,6 @@ import org.elastic.rest.scala.driver.test_utils.SampleResources._
 import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.RestBase.BaseDriverOp
-import org.elastic.rest.scala.driver.utils.MockRestDriver
 import utest._
 
 import scala.concurrent.ExecutionContext.Implicits.global

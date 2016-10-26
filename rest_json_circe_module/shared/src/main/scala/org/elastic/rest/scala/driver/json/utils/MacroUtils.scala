@@ -21,7 +21,6 @@ object MacroUtils {
     * @param driver The driver that actually execute the request
     * @param ec The execution context
     * @param ev The evidence for the output type
-    * @param ct The class tag for the output type
     * @tparam T The output type
     * @return A future containing the typed result
     */

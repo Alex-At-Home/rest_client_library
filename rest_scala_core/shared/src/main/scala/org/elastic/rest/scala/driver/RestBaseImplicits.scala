@@ -86,11 +86,61 @@ object RestBaseImplicits {
 
   // Typed output
 
-  //TODO
+  /** This trait should be made concrete for every class that is used as part of the REST data model
+    *  Eg if the output type of a resource is `T`, or a trait of which `T` is a child, then adding
+    *  `implicit val registeredT = new RegisterType[T] {}` in the scope will allow
+    *  `StringToTypedHelper.exec` and `StringToTypedHelper.result` to be used
+    */
   trait RegisterType[T]
 
   /** A trait to be implemented and used as an implicit to define how to go from a typed object
     * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
+    *
+    * This version differs from `StringToTypedHelper` in that it supports declaring a trait as the output
+    * type so different (mutually exclusive) modules can implement different concrete output classes (eg wrapping
+    * different JSON modules). Each concrete output type must be registered by declaring/importing an implicit
+    * `RegisterOutput[ConcreteClass] {}` val.
+    *
+    * (The `exec` method needs to be overriden in the concrete implementation, `typedOp` should be the implicit
+    *  class's input param)
+    *
+    * Note the implicit implementation needs to check for `CustomStringToTyped` and handle that separately
+    * (eg `if (ct.tpe <:< typeOf[CustomStringToTyped])` then can simply do `$ct(s)` in macro-land)
+    *
+    * @tparam T The output type to decode
+    */
+  trait StringToFlexibleTypedHelper[T] {
+    /** The typed operation the implicit encloses */
+    val typedOp: TypedDriverOp[T]
+
+    /** Actually executes the operation (aysnc)
+      *
+      * @param driver The driver which executes the operation
+      * @param ec The execution context for futures
+      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
+      * @return A future containing the result of the operation as a type
+      */
+    def exec[O <: T]
+      ()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Future[O] = EmptyBody
+
+    /** Actually executes the operation (sync)
+      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
+      * possible)
+      *
+      * @param timeout Optionally, the amount of time to wait before failing
+      * @param driver The driver which executes the operation
+      * @param ec The execution context for futures
+      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
+      * @return The result of the operation as a type
+      */
+    def result[O <: T]
+      (timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[O] = EmptyBody
+  }
+
+  /** A trait to be implemented and used as an implicit to define how to go from a typed object
+    * (eg case class) to a string, normally via JSON unless derived from `CustomTypedToString`
+    *
+    * This versions is simpler than `StringToFlexibleTypedHelper`, the output must be a single concrete type.
     *
     * (The `exec` method needs to be overriden in the concrete implementation, `typedOp` should be the implicit
     *  class's input param)
@@ -108,11 +158,9 @@ object RestBaseImplicits {
       *
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
-      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
       * @return A future containing the result of the operation as a type
       */
-    def exec[O <: T]
-      ()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Future[T] = EmptyBody
+    def exec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] = EmptyBody
 
     /** Actually executes the operation (sync)
       * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
@@ -121,11 +169,9 @@ object RestBaseImplicits {
       * @param timeout Optionally, the amount of time to wait before failing
       * @param driver The driver which executes the operation
       * @param ec The execution context for futures
-      * @param ev The evidence for the actual concrete type (in the case where `T` is a trait)
       * @return The result of the operation as a type
       */
-    def result[O <: T]
-      (timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[T] = EmptyBody
+    def result(timeout: Duration = null)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] = EmptyBody
   }
 
   // Typed input
