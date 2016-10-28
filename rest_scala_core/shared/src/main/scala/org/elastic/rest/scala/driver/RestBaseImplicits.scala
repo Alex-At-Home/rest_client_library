@@ -99,7 +99,7 @@ object RestBaseImplicits {
     * This version differs from `StringToTypedHelper` in that it supports declaring a trait as the output
     * type so different (mutually exclusive) modules can implement different concrete output classes (eg wrapping
     * different JSON modules). Each concrete output type must be registered by declaring/importing an implicit
-    * `RegisterOutput[ConcreteClass] {}` val.
+    * `RegisterType[ConcreteClass] {}` val.
     *
     * (The `exec` method needs to be overriden in the concrete implementation, `typedOp` should be the implicit
     *  class's input param)

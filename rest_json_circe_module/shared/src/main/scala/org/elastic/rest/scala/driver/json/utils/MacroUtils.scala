@@ -16,6 +16,7 @@ import scala.util.Try
 object MacroUtils {
 
   /** Executes a typed operation using the provided driver
+    * (Output type is flexible ie can be derived from a trait used in the resource declaration)
     *
     * @param c The macro context
     * @param driver The driver that actually execute the request
@@ -24,7 +25,7 @@ object MacroUtils {
     * @tparam T The output type
     * @return A future containing the typed result
     */
-  def execMaterialize[T]
+  def execMaterializeFlexible[T]
     (c: blackbox.Context)
     ()
     (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext], ev: c.Expr[RegisterType[T]])
@@ -57,8 +58,27 @@ object MacroUtils {
       }
     }
   }
+  /** Executes a typed operation using the provided driver
+    * (Output type is not flexible ie must be a concrete class)
+    *
+    * @param c The macro context
+    * @param driver The driver that actually execute the request
+    * @param ec The execution context
+    * @tparam T The output type
+    * @return A future containing the typed result
+    */
+  def execMaterializeFixed[T]
+  (c: blackbox.Context)
+  ()
+  (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext])
+  (implicit ct: c.WeakTypeTag[T])
+  : c.Expr[Future[T]] =
+  {
+    execMaterializeFlexible(c)()(driver, ec, null)(ct).asInstanceOf[c.Expr[Future[T]]]
+  }
 
   /** Executes a typed operation using the provided driver
+    * (Output type is flexible ie can be derived from a trait used in the resource declaration)
     *
     * @param c The macro context
     * @param driver The driver that actually execute the request
@@ -68,7 +88,7 @@ object MacroUtils {
     * @tparam T The output type
     * @return A future containing the typed result
     */
-  def resultMaterializeNoTimeout[T]
+  def resultMaterializeFlexibleNoTimeout[T]
     (c: blackbox.Context)
     ()
     (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext], ev: c.Expr[RegisterType[T]])
@@ -78,10 +98,31 @@ object MacroUtils {
     import c.universe._
 
     val timeoutOrDefault = reify { driver.splice.timeout }
-    resultMaterialize[T](c)(timeoutOrDefault)(driver, ec, ev)(ct).asInstanceOf[c.Expr[scala.util.Try[T]]]
+    resultMaterializeFlexible[T](c)(timeoutOrDefault)(driver, ec, ev)(ct).asInstanceOf[c.Expr[scala.util.Try[T]]]
   }
 
   /** Executes a typed operation using the provided driver
+    * (Output type is not flexible ie must be a concrete class)
+    *
+    * @param c The macro context
+    * @param driver The driver that actually execute the request
+    * @param ec The execution context
+    * @param ct The class tag for the output type
+    * @tparam T The output type
+    * @return A future containing the typed result
+    */
+  def resultMaterializeFixedNoTimeout[T]
+  (c: blackbox.Context)
+  ()
+  (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext])
+  (implicit ct: c.WeakTypeTag[T])
+  : c.Expr[Try[T]] =
+  {
+    resultMaterializeFlexibleNoTimeout(c)()(driver, ec, null)(ct).asInstanceOf[c.Expr[Try[T]]]
+  }
+
+  /** Executes a typed operation using the provided driver
+    * (Output type is flexible ie can be derived from a trait used in the resource declaration)
     *
     * @param c The macro context
     * @param driver The driver that actually execute the request
@@ -91,7 +132,7 @@ object MacroUtils {
     * @tparam T The output type
     * @return A future containing the typed result
     */
-  def resultMaterialize[T]
+  def resultMaterializeFlexible[T]
     (c: blackbox.Context)
     (timeout: c.Expr[Duration])
     (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext], ev: c.Expr[RegisterType[T]])
@@ -126,6 +167,26 @@ object MacroUtils {
         scala.util.Try { Await.result(exec, Option($timeout).getOrElse($driver.timeout)) }
        """
     }
+  }
+
+  /** Executes a typed operation using the provided driver
+    * (Output type is not flexible ie must be a concrete class)
+    *
+    * @param c The macro context
+    * @param driver The driver that actually execute the request
+    * @param ec The execution context
+    * @param ct The class tag for the output type
+    * @tparam T The output type
+    * @return A future containing the typed result
+    */
+  def resultMaterializeFixed[T]
+  (c: blackbox.Context)
+  (timeout: c.Expr[Duration])
+  (driver: c.Expr[RestDriver], ec: c.Expr[ExecutionContext])
+  (implicit ct: c.WeakTypeTag[T])
+  : c.Expr[Try[T]] =
+  {
+    resultMaterializeFlexible(c)(timeout)(driver, ec, null)(ct).asInstanceOf[c.Expr[Try[T]]]
   }
 
   /** Creates a string out of the supplied type and builds an operation using the

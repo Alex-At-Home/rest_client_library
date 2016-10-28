@@ -2,16 +2,12 @@ package org.elastic.rest.scala.driver.json.tests
 
 import java.util.concurrent.TimeUnit
 
-import io.circe._
-import io.circe.generic.JsonCodec
-import io.circe.parser.parse
 import org.elastic.rest.scala.driver.RestBase
 import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestBaseImplicits._
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.utils.MockRestDriver
-import org.elastic.rest.scala.driver.json.CirceJsonModule._
-import org.elastic.rest.scala.driver.json.CirceTypeModule._
+import org.elastic.rest.scala.driver.json.fixed_typing.CirceTypeModule._
 import utest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,16 +58,14 @@ object CirceTypeModuleJvmTests extends TestSuite {
   * (sidenote: annotating `TestDataModel` doesn't make `TestDataModelComponent` visible)
   */
 object JvmTestDataModel extends JvmTestDataModelComponent{
-  @JsonCodec case class TestRead(testRead: String)
-  @JsonCodec case class TestWrite(testWrite: String)
+  case class TestRead(testRead: String)
 }
 
 /**Illustrates the case where sub-components are used to partition
   * the code
   */
 trait JvmTestDataModelComponent {
-  @JsonCodec case class OtherTestRead(testRead: String)
-  @JsonCodec case class OtherTestWrite(testWrite: String)
+  case class OtherTestRead(testRead: String)
 
   case class TestWrapperWrite(s: String) extends CustomTypedToString {
     def fromTyped: String = s"""{"testWrite":"$s"}"""
@@ -84,17 +78,14 @@ trait JvmTestDataModelComponent {
 object JvmTestApiTyped extends JvmTestApiTypedExtensions {
   case class `/typed`()
     extends RestReadableT[Modifier, JvmTestDataModel.TestRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.TestWrite]
       with RestResource
 }
 trait JvmTestApiTypedExtensions {
   case class `/data_model`()
     extends RestReadableT[Modifier, JvmTestDataModel.OtherTestRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.OtherTestWrite]
       with RestResource
 
   case class `/custom_typed`()
     extends RestReadableT[Modifier, JvmTestDataModel.TestWrapperRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.TestWrapperWrite]
       with RestResource
 }

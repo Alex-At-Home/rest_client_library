@@ -84,6 +84,7 @@ object CirceRuntimeTypeModuleTests extends TestSuite {
 }
 
 /** Test object containing example data model for `TestApiRuntimeTyped`
+  * Note the `@JsonCodec`s are needed in the runtime version, unlike in the macro version
   * (sidenote: annotating `TestRuntimeDataModel` doesn't make `TestRuntimeDataModelComponent` visible)
   */
 object TestRuntimeDataModel extends TestRuntimeDataModelComponent{
@@ -93,6 +94,7 @@ object TestRuntimeDataModel extends TestRuntimeDataModelComponent{
 
 /**Illustrates the case where sub-components are used to partition
   * the code
+  * Note the `@JsonCodec`s are needed in the runtime version, unlike in the macro version
   */
 trait TestRuntimeDataModelComponent {
   @JsonCodec case class OtherTestRead(testRead: String)

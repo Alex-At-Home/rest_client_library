@@ -6,40 +6,13 @@ import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.json.utils.MacroUtils
 import org.elastic.rest.scala.driver.utils.MacroUtils.OpType
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
-import scala.reflect.ClassTag
-import scala.util.Try
 
 /** Integration for CIRCE with REST drivers - handles typed APIs
+  * Only handles the input types - see `flexible_typing.CirceTypeModule` or `fixed_typing.CirceTypeModule`
+  * for output typing
   */
-object CirceTypeModule {
-
-  //TODO also want a fixed version of this (and then to test both)
-
-  /** Typed outputs */
-  implicit class CirceTypedStringToTypeHelper[T](val typedOp: TypedDriverOp[T]) extends StringToFlexibleTypedHelper[T] {
-
-    override def exec[O <: T]
-      ()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Future[O] =
-        macro MacroUtils.execMaterialize[O]
-
-    override def result[O <: T]
-      (timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[O] =
-        macro MacroUtils.resultMaterialize[O]
-
-    /** Actually executes the operation (sync), with default timeout
-      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
-      * possible)
-      *
-      * @param driver The driver which executes the operation
-      * @param ec The execution context for futures
-      * @return The result of the operation as a type
-      */
-    def result[O <: T]()(implicit driver: RestDriver, ec: ExecutionContext, ev: RegisterType[O]): Try[O] =
-      macro MacroUtils.resultMaterializeNoTimeout[O]
-  }
+trait CirceInputTypeSubModule {
 
   // Lots of classes for the different typed inputs cases
 
@@ -119,3 +92,4 @@ object CirceTypeModule {
     override def delete(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 }
+object CirceInputTypeSubModule extends CirceInputTypeSubModule
