@@ -95,8 +95,11 @@ object NoJsonHelpers {
     * using the DSL defined in the `SimpleObjectDescription` companion object (eg
     * it is recommended to add `import SimpleObjectDescription._` to the package/object/etc in
     * which they are declared)
+    * @param packageAlias The alias used to prefix `SimpleObject`, `Field` etc in the client-side code
+    *                     eg if you have `import {SimpleObjectDescription => obj}`, this would be `"obj"`
+    * @param els The elements to insert into the root object
     */
-  class SimpleObjectDescription(els: SimpleObjectDescription.Element*) extends StaticAnnotation {
+  class SimpleObjectDescription(packageAlias: String, els: SimpleObjectDescription.Element*) extends StaticAnnotation {
     def macroTransform(annottees: Any*) = macro MacroUtils.simpleObjectDescriptionImpl
   }
   /** Companion object containing the DSL elements to build simple CustomTypedToString helpers */
@@ -115,10 +118,9 @@ object NoJsonHelpers {
     sealed trait Element
 
     /** Build an object in the `SimpleObjectDescription` DSL
-      * @param key The (constant) key at which the object is inserted
       * @param els The contents of the object
       */
-    case class SimpleObject(key: String, els: Element*) extends Element
+    case class SimpleObject(els: Element*) extends Element
     /** Constructor for an object in the `SimpleObjectDescription` DSL */
     object SimpleObject {
       class SimpleObjectInner(key: String) {
@@ -126,19 +128,15 @@ object NoJsonHelpers {
           * @param els The contents of the object
           * @return An object representation
           */
-        def apply(els: Element*) = SimpleObject(key, els:_*)
+        def apply(els: Element*) = Constant(key, SimpleObject(els:_*))
       }
-      /** Build an object in the `SimpleObjectDescription` DSL
+      /** Helper to build an object injected at `key` in the `SimpleObjectDescription` DSL
         * see constructor for extra params (`els`)
         * @param key The (constant) key at which the object is inserted
         * @return Temp function returning an object representation
         */
       def apply(key: String): SimpleObjectInner = new SimpleObjectInner(key)
     }
-
-    //TODO: when are these needed?
-//    case class RawValue(paramName: String) extends Element
-//    implicit def RawValueBuilder(paramName: String): RawValue = RawValue(paramName)
 
     /** Inserts a key-value pair into an object, where the key and value are both taken from the
       * constructor params of the case class
@@ -191,16 +189,53 @@ object NoJsonHelpers {
 
     /** Inserts a constant key/value pair with the designated values into an object
       * @param field The key name
-      * @param value The value (should be a `Seq`, `CustomTypedToString`, `String`, `Long`, `Double`, `Integer` or
-      *              `Boolean`)
+      * @param value The value (should be a `CustomTypedToString`, `Seq`, `String`, `Long`, `Double`, `Integer` or
+      *              `Boolean`, or finally `Element`)
       */
     case class Constant(field: String, value: Any) extends Element
 
     //////////////////////////////////////////
 
-    def ElementToString(el: Element): String = el match {
+    def el2Str(el: Element): String = el match {
 
-      case SimpleObject(key, els: Seq[Element]) => s"""  """
+        //TODO: need to pass key into any2Str since if optional the whole thing vanishes...
+        //TODO: handle varargs in pattern match...
+      case SimpleObject(els @ _*) =>
+        s""" { ${els.map(el2Str(_)).mkString(",")} } """
+      case KeyValue(keyParam, valueParam, prefix, extras @ _*) =>
+        val actualKey = ""//TODO how to interpret keyParam? (need to figure out escaping in string interp)
+        val bodyLogic = extras.toList match {
+          case Nil => s"${el2Str(valueParam)}"
+          case _ => //TODO: need to restrict allowed types of el (here and elsewhere?)
+            // eg here extras need to be a key value pair
+            s"""
+               {
+                  "$valueParam": ${el2Str(valueParam)},
+                  ${extras.map(el2Str(_)).mkString(",")}
+               }
+             """.stripMargin
+        }
+        s"""  "$actualKey": $bodyLogic """
+      case MultiTypeField(fieldParam, prefix) =>
+        ""//TODO
+      case Field(fieldParam, prefix) =>
+        s""" ${'$'}{any2Str("$fieldParam", $fieldParam)} """
+      case Constant(field, value) =>
+        s""" ${any2Str(field, value)} """
+    }
+
+    /**
+      * TODO
+      * @param key
+      * @param any
+      * @return
+      */
+    def any2Str(key: String, any: Any): String = any match {
+      case s: String => s""" "$key": "$s"  """
+      case b: Boolean => s""" "$key": $b  """
+      //TODO Seq/Option/Base/Custom also handle Element
+      case el: Element => s""" "$key": ${el2Str(el)}  """
+      case _ => throw new Exception(s"Invalid value: $any")
     }
 
   }

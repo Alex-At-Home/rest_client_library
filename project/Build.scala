@@ -60,6 +60,12 @@ object MyBuild extends Build {
           autoAPIMappings := true,
           libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
           libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
+          libraryDependencies ++= Seq(
+              "io.circe" %%% "circe-core",
+              "io.circe" %%% "circe-generic",
+              "io.circe" %%% "circe-parser"
+            )
+            .map(_ % circeVersion % "test"),
           testFrameworks += new TestFramework("utest.runner.Framework")
         ): _*)
       .jvmSettings()

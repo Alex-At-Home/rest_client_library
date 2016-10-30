@@ -17,12 +17,6 @@ import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription
   */
 object MacroUtils {
 
-  //TODO: test methd (move actual logic to NoJsonHelpers)
-  //TODO: look for fromTyped: String, replace with method built by traversing the DSL
-  def toStringTest(vals: Seq[SimpleObjectDescription.Element]): String = {
-    vals.map(_.toString).mkString(" | ")
-  }
-
   /** Fills in `fromTyped` method given the object description
     * @param c Whitebox macro context
     * @param annottees The code to annotate
@@ -31,25 +25,36 @@ object MacroUtils {
   def simpleObjectDescriptionImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
 
-    val annotationArgs = c.prefix.tree match {
-      case q"new $name( ..$params )" => params.map { p => p.asInstanceOf[c.Tree] }.map { p => c.Expr[Any](p) }
+    // Pull out the args
+    val (packageAlias, annotationArgs) = c.prefix.tree match {
+      case q"new $name( ${pkgAlias: String}, ..$params )" =>
+        (pkgAlias, params.map { p => p.asInstanceOf[c.Tree] }.map { p => c.Expr[Any](p) })
       case _ => c.abort(c.enclosingPosition,
         s"Invalid SimpleObjectDescription - must have at least one parameter")
     }
+    // Lift the macro args into a syntax tree that can be evaluated at compile time
+    val aliasedImportSelector = packageAlias match {
+      case "" => q""
+      case _ => c.parse(
+        s"import org.elastic.rest.scala.driver.utils.NoJsonHelpers.{SimpleObjectDescription => $packageAlias}")
+    }
     val newExpr = q"""import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
+                      $aliasedImportSelector
                       $annotationArgs
         """
-    val evaluatedAnnotationArgs = c.eval(c.Expr[Any](c.untypecheck(newExpr)))
+    val evaluatedAnnotationArgs = c.eval(c.Expr[Seq[Element]](c.untypecheck(newExpr)))
 
-    val str = evaluatedAnnotationArgs.toString
+    // Build a string interpolation
+    val annotExpansion = "s\"\"\"" + el2Str(SimpleObject(evaluatedAnnotationArgs:_*)) + "\"\"\""
 
+    // Compile the string interpolation inside the `fromTyped` in the parent cse class
     val newMethod = annottees map (_.tree) toList match {
       case (methodDef: DefDef) :: Nil =>
         methodDef match {
           case q"$modifiers def fromTyped: String = $body" =>
             q"""def fromTyped: String = {
-                org.elastic.rest.scala.driver.utils.MacroUtils.toStringTest($annotationArgs)
-                $str
+                import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
+                ${c.parse(annotExpansion)}
             }"""
           case x @ _ => c.abort(c.enclosingPosition,
             s"Invalid annottee - needs to be method in format def fromTyped: String = SimpleObjectDescription.AutoGenerate vs $x"
