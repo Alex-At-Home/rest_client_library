@@ -152,14 +152,7 @@ object NoJsonHelpers {
     case class KeyValue(keyParam: String, valueParam: Element, prefix: String, extras: Element*) extends Element
     /** Constructor for a key/value pair in the `SimpleObjectDescription` DSL */
     object KeyValue {
-      /** Inserts a key-value pair into an object, where the key and value are both taken from the
-        * constructor params of the case class - see constructor for extra params (`valueParam`, `extras`)
-        * @param keyParam The name of the ctor param that will represent the key
-        * @param prefix A prefix to be inserted before the key
-        * @return Temp function returning a key-value pair representation
-        */
-      def apply(keyParam: String, prefix: String = ""): (Element, Seq[Element]) => KeyValue = {
-        //TODO: this doesn't work, see above
+      class KeyValueInner(keyParam: String, prefix: String) {
         /**
           * @param valueParam The name of the ctor param that will represent the value
           * @param extras A list of additional elements ... if these are present then the `valueParam`
@@ -167,9 +160,16 @@ object NoJsonHelpers {
           *               and the extras are injected along side (ie at the same level)
           * @return A key-value pair representation
           */
-        def applyImpl(valueParam: Element, extras: Element*) = KeyValue(keyParam, valueParam, prefix, extras: _*)
-        applyImpl _
+        def apply(valueParam: Element, extras: Element*) = KeyValue(keyParam, valueParam, prefix, extras: _*)
+
       }
+      /** Inserts a key-value pair into an object, where the key and value are both taken from the
+        * constructor params of the case class - see constructor for extra params (`valueParam`, `extras`)
+        * @param keyParam The name of the ctor param that will represent the key
+        * @param prefix A prefix to be inserted before the key
+        * @return Temp function returning a key-value pair representation
+        */
+      def apply(keyParam: String, prefix: String = ""): KeyValueInner = new KeyValueInner(keyParam, prefix)
     }
 
     /** This inserts a key/val pair for a Seq, where if there are 0 values then the key/val
@@ -195,6 +195,14 @@ object NoJsonHelpers {
       *              `Boolean`)
       */
     case class Constant(field: String, value: Any) extends Element
+
+    //////////////////////////////////////////
+
+    def ElementToString(el: Element): String = el match {
+
+      case SimpleObject(key, els: Seq[Element]) => s"""  """
+    }
+
   }
 
 }

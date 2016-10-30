@@ -36,12 +36,20 @@ object MacroUtils {
       case _ => c.abort(c.enclosingPosition,
         s"Invalid SimpleObjectDescription - must have at least one parameter")
     }
+    val newExpr = q"""import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
+                      $annotationArgs
+        """
+    val evaluatedAnnotationArgs = c.eval(c.Expr[Any](c.untypecheck(newExpr)))
+
+    val str = evaluatedAnnotationArgs.toString
+
     val newMethod = annottees map (_.tree) toList match {
       case (methodDef: DefDef) :: Nil =>
         methodDef match {
           case q"$modifiers def fromTyped: String = $body" =>
             q"""def fromTyped: String = {
                 org.elastic.rest.scala.driver.utils.MacroUtils.toStringTest($annotationArgs)
+                $str
             }"""
           case x @ _ => c.abort(c.enclosingPosition,
             s"Invalid annottee - needs to be method in format def fromTyped: String = SimpleObjectDescription.AutoGenerate vs $x"
