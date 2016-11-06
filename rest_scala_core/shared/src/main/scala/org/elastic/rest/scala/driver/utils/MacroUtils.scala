@@ -45,7 +45,7 @@ object MacroUtils {
     val evaluatedAnnotationArgs = c.eval(c.Expr[Seq[Element]](c.untypecheck(newExpr)))
 
     // Build a string interpolation
-    val annotExpansion = "s\"\"\"" + el2Str(SimpleObject(evaluatedAnnotationArgs:_*)) + "\"\"\""
+    val annotExpansion = "s\"\"\"" + el2Str(SimpleObject(evaluatedAnnotationArgs:_*), isFirst = true) + "\"\"\""
 
     // Compile the string interpolation inside the `fromTyped` in the parent cse class
     val newMethod = annottees map (_.tree) toList match {
