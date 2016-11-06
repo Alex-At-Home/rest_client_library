@@ -215,15 +215,8 @@ object NoJsonHelpers {
 
     //////////////////////////////////////////
 
-    /** Converts a sequence of elements into a sequence of strings with commas correctly inserted
-      * (handling potentially empty elements - this is only known at runtime, so can't just use
-      *  `mkString(",")` in the auto-generated code)
-      * @return A sequence with the elements converted to (possibly empty) strings with commas inserted correctly
-      */
-    private def els2Str(els: List[Element]): List[String]= els match {
-      case Nil => Nil
-      case a :: b => el2Str(a, isFirst = true) :: b.map(el => el2Str(el, isFirst = false))
-    }
+    //TODO: need to pass in an "allowed values" enum set that generates compile-time errors if invalid JSON is generated
+    // (eg `ConstantValue` and `FieldValue` are only allowed as element params to `KeyValue`))
 
     /** Converts an element in the simple object description DSL into a string
       * @param el The DSL element to convert
@@ -235,30 +228,30 @@ object NoJsonHelpers {
       case SimpleObject(els @ _*) =>
         s""" { ${els2Str(els.toList).mkString(" ")} } """
 
-      case KeyValue(keyParam, valueParam, prefix, extras@_*) => //TODO: ned to handle the case where keyParam is missing optional here....
+      case KeyValue(keyParam, valueParam, prefix, extras @ _*) => //TODO: ned to handle the case where keyParam is `None`?
         val actualKey = s"""${'$'}{"$prefix" + $keyParam}"""
-        val bodyLogic = extras.toList match {
-          case Nil => s"${el2Str(valueParam, isFirst = true)}" //()
+        val bodyLogic = extras match {
+          case Seq() => s"${el2Str(valueParam, isFirst = true)}"
           case _ =>
             // eg here extras need to be a key value pair
             s"""{
-              "$valueParam": ${el2Str(valueParam, isFirst = true)},
+              "$keyParam": ${el2Str(valueParam, isFirst = true)},
               ${els2Str(extras.toList).mkString(" ")}
             }"""
         }
         s""" ${addComma(isFirst)} "$actualKey": $bodyLogic """
 
-      case MultiTypeField(fieldParam, prefix) =>
+      case MultiTypeField(fieldParam, prefix) => //TODO: (do we need extras here?)
         s"""${'$'}{$fieldParam match {
           case Seq() => ""
           case Seq(el) => any2Str("$prefix$fieldParam", el, $isFirst)
           case _ => any2Str("$prefix$fieldParam", $fieldParam, $isFirst)
         }}"""
 
-      case Field(fieldParam, prefix) =>
+      case Field(fieldParam, prefix) => //TODO: (do we need extras here?)
         s""" ${'$'}{any2Str("$prefix$fieldParam", $fieldParam, $isFirst)} """
 
-      case Constant(field, value) =>
+      case Constant(field, value) => //TODO: (do we need extras here?)
         s""" ${any2Str(field, value, isFirst)} """
 
       case FieldValue(field) =>
@@ -299,6 +292,16 @@ object NoJsonHelpers {
       case custom: CustomTypedToString => custom.fromTyped
       case seq: Seq[_] => s""" [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
       case _ => throw new Exception(s"Invalid value: $any")
+    }
+
+    /** Converts a sequence of elements into a sequence of strings with commas correctly inserted
+      * (handling potentially empty elements - this is only known at runtime, so can't just use
+      *  `mkString(",")` in the auto-generated code)
+      * @return A sequence with the elements converted to (possibly empty) strings with commas inserted correctly
+      */
+    private def els2Str(els: List[Element]): List[String]= els match {
+      case Nil => Nil
+      case a :: b => el2Str(a, isFirst = true) :: b.map(el => el2Str(el, isFirst = false))
     }
 
     /** Utility for inserting commans correctly between non-empty elements*/
