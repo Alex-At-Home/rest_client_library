@@ -138,6 +138,41 @@ object NoJsonHelpers {
       def apply(key: String): SimpleObjectInner = new SimpleObjectInner(key)
     }
 
+    /** Inserts a map of key-value pairs into an object, where the key and value are both taken from the
+      * constructor params of the case class
+      *
+      * @param keyValuesParam  The name of the ctor param that will represent the map of key/value
+      * @param prefix     A prefix to be inserted before the key
+      * @param extras     A list of additional elements ... if these are present then the `valueParam`
+      *                   is injected into an object under the (constant) name of the `valueParam` string
+      *                   and the extras are injected along side (ie at the same level)
+      */
+    case class KeyValues(keyValuesParam: String, prefix: String, extras: Element*) extends Element
+
+    /** Constructor for a key/value pair in the `SimpleObjectDescription` DSL */
+    object KeyValues {
+
+      class KeyValuesInner(keyValuesParam: String, prefix: String) {
+        /**
+          * @param extras     A list of additional elements ... if these are present then the `valueParam`
+          *                   is injected into an object under the (constant) name of the `valueParam` string
+          *                   and the extras are injected along side (ie at the same level)
+          * @return A key-value pair representation
+          */
+        def apply(extras: Element*) = KeyValues(keyValuesParam, prefix, extras: _*)
+
+      }
+
+      /** Inserts a key-value pair into an object, where the key and value are both taken from the
+        * constructor params of the case class - see constructor for extra params (`valueParam`, `extras`)
+        *
+        * @param keyParam The name of the ctor param that will represent the key
+        * @param prefix   A prefix to be inserted before the key
+        * @return Temp function returning a key-value pair representation
+        */
+      def apply(keyParam: String, prefix: String = ""): KeyValuesInner = new KeyValuesInner(keyParam, prefix)
+    }
+
     /** Inserts a key-value pair into an object, where the key and value are both taken from the
       * constructor params of the case class
       *
@@ -228,7 +263,14 @@ object NoJsonHelpers {
       case SimpleObject(els @ _*) =>
         s""" { ${els2Str(els.toList).mkString(" ")} } """
 
-      case KeyValue(keyParam, valueParam, prefix, extras @ _*) => //TODO: ned to handle the case where keyParam is `None`?
+      case KeyValues(keyValuesParam, prefix, extras @ _*) =>
+        s"""${'$'}{$keyValuesParam map { (k, v) =>
+
+        }.mkString("")
+        """
+        //TODO map case
+
+      case KeyValue(keyParam, valueParam, prefix, extras @ _*) => //TODO: need to handle the case where keyParam is `None`?
         val actualKey = s"""${'$'}{"$prefix" + $keyParam}"""
         val bodyLogic = extras match {
           case Seq() => s"${el2Str(valueParam, isFirst = true)}"
