@@ -263,12 +263,14 @@ object NoJsonHelpers {
       case SimpleObject(els @ _*) =>
         s""" { ${els2Str(els.toList).mkString(" ")} } """
 
-      case KeyValues(keyValuesParam, prefix, extras @ _*) =>
-        s"""${'$'}{$keyValuesParam map { (k, v) =>
+      case KeyValues(keyValuesParam, prefix, extras @ _*) => //TODO: handle extras here, until then error at compile time
+        if (!extras.isEmpty)
+          throw new Exception(s"Cannot currently specify 'extras' in KeyValues declaration, please contact developer")
 
-        }.mkString("")
-        """
-        //TODO map case
+        s"""${'$'}{$keyValuesParam.foldLeft("") { (acc, kv) =>
+             acc + any2Str("$prefix" + kv._1, kv._2, $isFirst && acc.trim().isEmpty)
+          }
+        }"""
 
       case KeyValue(keyParam, valueParam, prefix, extras @ _*) => //TODO: need to handle the case where keyParam is `None`?
         val actualKey = s"""${'$'}{"$prefix" + $keyParam}"""
