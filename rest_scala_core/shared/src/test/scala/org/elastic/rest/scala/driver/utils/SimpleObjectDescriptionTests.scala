@@ -117,8 +117,8 @@ object SimpleObjectDescriptionTests extends TestSuite {
       Try { any2Str(WontWork()) }.isFailure ==> true
 
       // Check  the number combos:
-      any2Str("a", 1.0.toFloat, isFirst = true).trim() ==> """ "a":  1.0 """.trim()
-      any2Str("a", 1.0, isFirst = true).trim() ==> """ "a":  1.0 """.trim()
+      any2Str("a", 1.1.toFloat, isFirst = true).trim() ==> """ "a":  1.1 """.trim()
+      any2Str("a", 1.1, isFirst = true).trim() ==> """ "a":  1.1 """.trim()
       any2Str("a", 1.toLong, isFirst = true).trim() ==> """ "a":  1 """.trim()
       any2Str("a", 1, isFirst = true).trim() ==> """ "a":  1 """.trim()
 
