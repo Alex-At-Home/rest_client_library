@@ -211,13 +211,14 @@ object NoJsonHelpers {
     }
 
     /** This inserts a key/val pair for a Seq, where if there are 0 values then the key/val
-      * pair isn't inserted, if there is 1 value, it is inserted as value, and if there are >1 then it is inserted
-      * as an array
+      * pair isn't inserted, if there is 1 value, it is inserted as either value or single-value-array (depending on
+      * `arrayIfSingleton`), and if there are >1 then it is inserted as an array
       *
       * @param fieldParam The case class parameter containing the field value
+      * @param arrayIfSingleton If false (defaults to true)
       * @param prefix     A prefix to be inserted before the field
       */
-    case class MultiTypeField(fieldParam: String, prefix: String = "") extends Element
+    case class MultiTypeField(fieldParam: String, arrayIfSingleton: Boolean = true, prefix: String = "") extends Element
 
     /** This inserts a key/val pair into an object, where the key is given by the `fieldParam` string,
       * and the value is given by the case class parameter of that name
@@ -264,11 +265,11 @@ object NoJsonHelpers {
         s""" { ${els2Str(els.toList).mkString(" ")} } """
 
       case KeyValues(keyValuesParam, prefix, extras @ _*) => //TODO: handle extras here, until then error at compile time
-        if (!extras.isEmpty)
+        if (extras.nonEmpty)
           throw new Exception(s"Cannot currently specify 'extras' in KeyValues declaration, please contact developer")
 
         s"""${'$'}{$keyValuesParam.foldLeft("") { (acc, kv) =>
-             acc + any2Str("$prefix" + kv._1, kv._2, $isFirst && acc.trim().isEmpty)
+             acc + any2Str(kv._1, "$prefix", kv._2, $isFirst && acc.trim().isEmpty)
           }
         }"""
 
@@ -285,18 +286,18 @@ object NoJsonHelpers {
         }
         s""" ${addComma(isFirst)} "$actualKey": $bodyLogic """
 
-      case MultiTypeField(fieldParam, prefix) => //TODO: (do we need extras here?)
+      case MultiTypeField(fieldParam, arrayIfSingleton, prefix) => //TODO: (do we need extras here?)
         s"""${'$'}{$fieldParam match {
           case Seq() => ""
-          case Seq(el) => any2Str("$prefix$fieldParam", el, $isFirst)
-          case _ => any2Str("$prefix$fieldParam", $fieldParam, $isFirst)
+          case Seq(el) if !$arrayIfSingleton => any2Str("$fieldParam", "$prefix", el, $isFirst)
+          case _ => any2Str("$fieldParam", "$prefix", $fieldParam, $isFirst)
         }}"""
 
       case Field(fieldParam, prefix) => //TODO: (do we need extras here?)
-        s""" ${'$'}{any2Str("$prefix$fieldParam", $fieldParam, $isFirst)} """
+        s""" ${'$'}{any2Str("$fieldParam", "$prefix", $fieldParam, $isFirst)} """
 
       case Constant(field, value) => //TODO: (do we need extras here?)
-        s""" ${any2Str(field, value, isFirst)} """
+        s""" ${any2Str(field, "", value, isFirst)} """
 
       case FieldValue(field) =>
         s""" ${'$'}{any2Str($field)} """
@@ -311,14 +312,16 @@ object NoJsonHelpers {
       * @param isFirst Is the first element in a seq, ie shouldn't prepend a comma regardless
       * @return An embeddable string
       */
-    def any2Str(key: String, any: Any, isFirst: Boolean): String = any match {
+    def any2Str(key: String, prefix: String, any: Any, isFirst: Boolean): String = any match {
       case (_:String | _:Boolean | _:Integer | _:Long | _:Float | _:Double | _:Element | _:CustomTypedToString) =>
-        s"""  ${addComma(isFirst)} "$key": ${any2Str(any)} """
+        s"""  ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": ${any2Str(any)} """
 
-      case o: Option[_] => o.map(c => any2Str(key, c, isFirst)).getOrElse("")
-      case seq: Seq[_] => s""" ${addComma(isFirst)} "$key": [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
+      case e: Either[_, _] => any2Str(key, prefix, e.fold[Any](l => l, r => r), isFirst)
+      case o: Option[_] => o.map(c => any2Str(key, prefix, c, isFirst)).getOrElse("")
+      case seq: Seq[_] =>
+        s""" ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
 
-      case _ => throw new Exception(s"Invalid key/value: $key / $any")
+      case _ => throw new Exception(s"Invalid prefix/key/value: $prefix / $key / $any")
     }
 
     /** Converts any supported type into a string
@@ -353,6 +356,12 @@ object NoJsonHelpers {
       case true => ""
       case false => ","
     }
+
+    /** Remove backticks from keys */
+    private def removeBackTicks(key: String) =
+    if (key.charAt(0) == '`') key.substring(1, key.length - 1)
+    else key
+
   }
 }
 
