@@ -121,9 +121,9 @@ object CirceRuntimeTypeModule {
           .getOrElseUpdate(ct.tpe.toString, getGeneratedDecoder[T])
 
         decode[T](s)(decoder.asInstanceOf[Decoder[T]])
-          .leftMap({ err =>
+          .left.map({ err =>
             throw RestServerException(200, s"JSON serialization error: $err", Option(s)) }
-          ).toOption.get
+          ).right.get
       }
     }
   }

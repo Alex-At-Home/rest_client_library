@@ -23,7 +23,7 @@ object MyBuild extends Build {
 
   // Dependencies:
 
-  val circeVersion = "0.4.1"
+  val circeVersion = "0.6.0"
   val utestJvmVersion = "0.4.3"
   val rosHttpVersion = "2.0.0-RC1"
 
@@ -88,7 +88,8 @@ object MyBuild extends Build {
         libraryDependencies ++= Seq(
             "io.circe" %%% "circe-core",
             "io.circe" %%% "circe-generic",
-            "io.circe" %%% "circe-parser"
+            "io.circe" %%% "circe-parser",
+            "io.circe" %%% "circe-optics"
           )
           .map(_ % circeVersion),
         testFrameworks += new TestFramework("utest.runner.Framework")

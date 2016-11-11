@@ -39,10 +39,8 @@ object CirceJsonModule {
     * @return Parsed string
     */
   private def toJson(s: String): Json = {
-    parse(s)
-      .leftMap({ err =>
-        throw RestServerException(200, s"JSON serialization error: $err", Option(s)) }
-      )
-      .getOrElse(Json.Null)
+    parse(s).left.map { err =>
+      throw RestServerException(200, s"JSON serialization error: $err", Option(s))
+    }.right.getOrElse(Json.Null)
   }
 }

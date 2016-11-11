@@ -55,7 +55,7 @@ object CirceTypeModuleTests extends TestSuite {
       implicit val mockDriver = new MockRestDriver(macroHandler)
 
       TestApiTyped.`/typed`().write(TestDataModel.TestWrite("write")).execJ().map { result =>
-        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
       }
     }
     "Test custom typed extensions (read)" - {
@@ -70,7 +70,7 @@ object CirceTypeModuleTests extends TestSuite {
       implicit val mockDriver = new MockRestDriver(customHandler)
 
       TestApiTyped.`/custom_typed`().write(TestDataModel.TestWrapperWrite("write")).execJ().map { result =>
-        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
       }
     }
   }

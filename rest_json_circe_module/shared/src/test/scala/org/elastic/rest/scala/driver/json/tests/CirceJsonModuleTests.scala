@@ -27,13 +27,13 @@ object CirceJsonModuleTests extends TestSuite {
     implicit val mockDriver = new MockRestDriver(handler)
     "Test JSON - read" - {
       TestApiUntyped.`/`().read().execJ().map { result =>
-        result ==> parse("""{ "test": "get" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "get" }""").right.getOrElse(Json.Null)
       }
     }
     "Test JSON - write" - {
-      val json = parse("""{ "test": "write" }""").getOrElse(Json.Null)
+      val json = parse("""{ "test": "write" }""").right.getOrElse(Json.Null)
       TestApiUntyped.`/`().writeJ(json).execJ().map { result =>
-        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
       }
     }
   }
