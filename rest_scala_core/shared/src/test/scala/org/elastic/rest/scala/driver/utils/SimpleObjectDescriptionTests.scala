@@ -68,7 +68,7 @@ object SimpleObjectDescriptionTests extends TestSuite {
         (field1: Either[String, Boolean],
          maybeField2: Option[String], maybeField3: Option[String],
          termName: String, termValue: List[Int], valOrVals: List[String],
-         `multiVals`: List[Injected]
+         `multiVals`: List[Injected], emptyMap: Map[String, String]
         )
         extends CustomTypedToString
       {
@@ -77,6 +77,8 @@ object SimpleObjectDescriptionTests extends TestSuite {
             Field("field1", "test.prefix."),
             Field("maybeField2"),
             Field("maybeField3"),
+            Field("emptyMap", "empty-"),
+            MultiTypeField("emptyMap"),
             KeyValue("termName")(
               SimpleObject(
                 Field("termValue"),
@@ -93,13 +95,15 @@ object SimpleObjectDescriptionTests extends TestSuite {
       val test2 = Test2(Right(false),
         None, Some("test"),
         "myTermName", List(1, 2, 3), List("a"),
-        List(Injected(b = true, d = 0.0), Injected(b = false, d = 1.0))
+        List(Injected(b = true, d = 0.0), Injected(b = false, d = 1.0)),
+        emptyMap = Map()
       )
 
       parse(test2.fromTyped) ==> parse(
         """{ "insert_here": {
             "test.prefix.field1": false,
             "maybeField3": "test",
+            "empty-emptyMap": {},
             "myTermName": {
               "termName": {
                 "termValue": [ 1, 2, 3 ],
@@ -129,11 +133,15 @@ object SimpleObjectDescriptionTests extends TestSuite {
       Try { any2Str("a", "", WontWork(), isFirst = true) }.isFailure ==> true
       Try { any2Str(WontWork()) }.isFailure ==> true
 
-      // Check  the number combos:
+      // Check the number combos:
       any2Str("a", "", 1.1.toFloat, isFirst = true).trim().replaceAll("1[.]1[0-9]+", "1.1") ==> """ "a":  1.1 """.trim()
       any2Str("a", "", 1.1, isFirst = true).trim().replaceAll("1[.]1[0-9]+", "1.1") ==> """ "a":  1.1 """.trim()
       any2Str("a", "", 1.toLong, isFirst = true).trim() ==> """ "a":  1 """.trim()
       any2Str("a", "", 1, isFirst = true).trim() ==> """ "a":  1 """.trim()
+
+      // Internal map
+      parse(s"""{ ${any2Str("a", "", Map("k" -> "v", "b" -> true), isFirst = true)} }""") ==>
+        parse("""{ "a": { "k": "v", "b": true } }""")
 
       //(everything else is tested above)
     }

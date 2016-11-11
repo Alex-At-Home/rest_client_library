@@ -211,8 +211,9 @@ object NoJsonHelpers {
     }
 
     /** This inserts a key/val pair for a Seq, where if there are 0 values then the key/val
-      * pair isn't inserted, if there is 1 value, it is inserted as either value or single-value-array (depending on
+      * pair isn't inserted, (if there is 1 value, it is inserted as either value or single-value-array (depending on
       * `arrayIfSingleton`), and if there are >1 then it is inserted as an array
+      * Also works for Map, where it simply does not display the field if the map is empty
       *
       * @param fieldParam The case class parameter containing the field value
       * @param arrayIfSingleton If false (defaults to true)
@@ -288,6 +289,7 @@ object NoJsonHelpers {
 
       case MultiTypeField(fieldParam, arrayIfSingleton, prefix) => //TODO: (do we need extras here?)
         s"""${'$'}{$fieldParam match {
+          case m: Map[_, _] if m.isEmpty => ""
           case Seq() => ""
           case Seq(el) if !$arrayIfSingleton => any2Str("$fieldParam", "$prefix", el, $isFirst)
           case _ => any2Str("$fieldParam", "$prefix", $fieldParam, $isFirst)
@@ -318,8 +320,10 @@ object NoJsonHelpers {
 
       case e: Either[_, _] => any2Str(key, prefix, e.fold[Any](l => l, r => r), isFirst)
       case o: Option[_] => o.map(c => any2Str(key, prefix, c, isFirst)).getOrElse("")
+      case map: Map[_, _] =>
+        s""" ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": ${any2Str(map)} """
       case seq: Seq[_] =>
-        s""" ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
+        s""" ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": ${any2Str(seq)} """
 
       case _ => throw new Exception(s"Invalid prefix/key/value: $prefix / $key / $any")
     }
@@ -329,15 +333,16 @@ object NoJsonHelpers {
       * @return An embeddable string
       */
     def any2Str(any: Any): String = any match {
-      case s: String => s""" "$s"  """
-      case b: Boolean => s""" $b  """
-      case i: Integer => s""" $i  """
-      case l: Long => s""" $l  """
-      case f: Float => s""" $f  """
-      case d: Double => s""" $d  """
+      case s: String => s""" "$s" """
+      case b: Boolean => s""" $b """
+      case i: Integer => s""" $i """
+      case l: Long => s""" $l """
+      case f: Float => s""" $f """
+      case d: Double => s""" $d """
       case el: Element => el2Str(el, isFirst = true) //(adding command handled by calling version of any2Str)
       case custom: CustomTypedToString => custom.fromTyped
       case seq: Seq[_] => s""" [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
+      case map: Map[_, _] => s""" { ${map.map { case (k, v) => s""" "$k": ${any2Str(v)} """}.mkString(",")} } """
       case _ => throw new Exception(s"Invalid value: $any")
     }
 
