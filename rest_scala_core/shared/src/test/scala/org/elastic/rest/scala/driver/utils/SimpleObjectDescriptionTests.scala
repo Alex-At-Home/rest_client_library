@@ -13,9 +13,6 @@ object SimpleObjectDescriptionTests extends TestSuite {
   val tests = this {
     "Basic mock functionality - handled" - {
 
-      //TODO: extra , is have extras?
-      //TODO: somehow have field here?
-
       /** (Package declaration == "obj")
         * `KeyValue` with no `extras`, `FieldValue`, `Constant`, `MultiTypeField` with cardinality == 0 */
       case class Test
