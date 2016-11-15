@@ -143,23 +143,39 @@ object NoJsonHelpers {
       *
       * @param keyValuesParam  The name of the ctor param that will represent the map of key/value
       * @param prefix     A prefix to be inserted before the key
+      * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+      *                       - this parameter specifies the name that is used for the key at which the value
+      *                       is injected
       * @param extras     A list of additional elements ... if these are present then the `valueParam`
       *                   is injected into an object under the (constant) name of the `valueParam` string
       *                   and the extras are injected along side (ie at the same level)
       */
-    case class KeyValues(keyValuesParam: String, prefix: String, extras: Element*) extends Element
+    case class KeyValues(keyValuesParam: String, prefix: String, valueParamName: String, extras: Element*) extends Element
 
     /** Constructor for a key/value pair in the `SimpleObjectDescription` DSL */
     object KeyValues {
 
       class KeyValuesInner(keyValuesParam: String, prefix: String) {
-        /**
+
+        /** Inserts a map of key-value pairs into an object, where the key and value are both taken from the
+          * constructor params of the case class
+          *
+          * @return A key-value pair representation
+          */
+        def apply() = KeyValues(keyValuesParam, prefix, "")
+
+        /** Inserts a map of key-value pairs into an object, where the key and value are both taken from the
+          * constructor params of the case class
+          *
+          * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+          *                       - this parameter specifies the name that is used for the key at which the value
+          *                       is injected
           * @param extras     A list of additional elements ... if these are present then the `valueParam`
           *                   is injected into an object under the (constant) name of the `valueParam` string
           *                   and the extras are injected along side (ie at the same level)
           * @return A key-value pair representation
           */
-        def apply(extras: Element*) = KeyValues(keyValuesParam, prefix, extras: _*)
+        def apply(valueParamName: String, extras: Element*) = KeyValues(keyValuesParam, prefix, valueParamName, extras: _*)
 
       }
 
@@ -179,25 +195,49 @@ object NoJsonHelpers {
       * @param keyParam   The name of the ctor param that will represent the key
       * @param valueParam The name of the ctor param that will represent the value
       * @param prefix     A prefix to be inserted before the key
+      * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+      *                       - this parameter specifies the name that is used for the key at which the value
+      *                       is injected
       * @param extras     A list of additional elements ... if these are present then the `valueParam`
       *                   is injected into an object under the (constant) name of the `valueParam` string
       *                   and the extras are injected along side (ie at the same level)
       */
-    case class KeyValue(keyParam: String, valueParam: Element, prefix: String, extras: Element*) extends Element
+    case class KeyValue
+      (keyParam: String, valueParam: Element, prefix: String, valueParamName: String, extras: Element*) extends Element
 
     /** Constructor for a key/value pair in the `SimpleObjectDescription` DSL */
     object KeyValue {
 
       class KeyValueInner(keyParam: String, prefix: String) {
         /**
-          * @param valueParam The name of the ctor param that will represent the value
+          * @param valueParam The object DSL (object or raw value) that is injected under key `keyParam`
+          * @return A key-value pair representation
+          */
+        def apply(valueParam: Element) = KeyValue(keyParam, valueParam, prefix, "")
+
+        /**
+          * @param valueParam The object DSL (object or raw value) that is injected under key `keyParam`
+          * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+          *                       - this parameter specifies the name that is used for the key at which the value
+          *                       is injected
           * @param extras     A list of additional elements ... if these are present then the `valueParam`
           *                   is injected into an object under the (constant) name of the `valueParam` string
           *                   and the extras are injected along side (ie at the same level)
           * @return A key-value pair representation
           */
-        def apply(valueParam: Element, extras: Element*) = KeyValue(keyParam, valueParam, prefix, extras: _*)
-
+        def apply(valueParam: Element, valueParamName: String, extras: Element*) = KeyValue(
+          keyParam, valueParam, prefix, valueParamName, extras: _*
+        )
+        /**
+          * @param valueParam The name of the ctor param that will represent the value (has to be a simple field)
+          * @param extras     A list of additional elements ... if these are present then the `valueParam`
+          *                   is injected into an object under the (constant) name of the `valueParam` string
+          *                   and the extras are injected along side (ie at the same level)
+          * @return A key-value pair representation
+          */
+        def apply(valueParam: String, extras: Element*) = KeyValue(
+          keyParam, FieldValue(valueParam), prefix, valueParam, extras: _*
+        )
       }
 
       /** Inserts a key-value pair into an object, where the key and value are both taken from the
@@ -265,7 +305,7 @@ object NoJsonHelpers {
       case SimpleObject(els @ _*) =>
         s""" { ${els2Str(els.toList, startsObject = true).mkString(" ")} } """
 
-      case KeyValues(keyValuesParam, prefix, extras @ _*) => //TODO: handle extras here, until then error at compile time
+      case KeyValues(keyValuesParam, prefix, valueParamName, extras @ _*) => //TODO: handle extras here, until then error at compile time
         if (extras.nonEmpty)
           throw new Exception(s"Cannot currently specify 'extras' in KeyValues declaration, please contact developer")
 
@@ -274,7 +314,7 @@ object NoJsonHelpers {
           }
         }"""
 
-      case KeyValue(keyParam, valueParam, prefix, extras @ _*) => //TODO: need to handle the case where keyParam is `None`?
+      case KeyValue(keyParam, valueParam, prefix, valueParamName, extras @ _*) => //TODO: need to handle the case where keyParam is `None`?
         val actualKey = s"""${'$'}{"$prefix" + $keyParam}"""
         val bodyLogic = extras match {
           case Seq() => s"${el2Str(valueParam, isFirst = true)}"
@@ -287,7 +327,7 @@ object NoJsonHelpers {
                   s\"\"\"  ${el2Str(valueParam, isFirst = true)} \"\"\"
                 }
                 else {s\"\"\"{
-                    "$keyParam": ${el2Str(valueParam, isFirst = true)}
+                    "$valueParamName": ${el2Str(valueParam, isFirst = true)}
                     ${els2Str(extras.toList, startsObject = false).mkString(" ")}
                   }\"\"\"
                 }
