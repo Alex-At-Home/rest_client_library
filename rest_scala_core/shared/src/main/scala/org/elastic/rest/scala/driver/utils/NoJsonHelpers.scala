@@ -263,7 +263,7 @@ object NoJsonHelpers {
     def el2Str(el: Element, isFirst: Boolean): String = el match {
 
       case SimpleObject(els @ _*) =>
-        s""" { ${els2Str(els.toList).mkString(" ")} } """
+        s""" { ${els2Str(els.toList, startsObject = true).mkString(" ")} } """
 
       case KeyValues(keyValuesParam, prefix, extras @ _*) => //TODO: handle extras here, until then error at compile time
         if (extras.nonEmpty)
@@ -280,10 +280,18 @@ object NoJsonHelpers {
           case Seq() => s"${el2Str(valueParam, isFirst = true)}"
           case _ =>
             // eg here extras need to be a key value pair
-            s"""{
-              "$keyParam": ${el2Str(valueParam, isFirst = true)},
-              ${els2Str(extras.toList).mkString(" ")}
-            }"""
+            s"""
+             ${'$'}{
+                val extras = s\"\"\"${els2Str(extras.toList, startsObject = false).mkString(" ")}\"\"\"
+                if (extras.trim().isEmpty()) {
+                  s\"\"\"  ${el2Str(valueParam, isFirst = true)} \"\"\"
+                }
+                else {s\"\"\"{
+                    "$keyParam": ${el2Str(valueParam, isFirst = true)}
+                    ${els2Str(extras.toList, startsObject = false).mkString(" ")}
+                  }\"\"\"
+                }
+             }"""
         }
         s""" ${addComma(isFirst)} "$actualKey": $bodyLogic """
 
@@ -351,9 +359,9 @@ object NoJsonHelpers {
       *  `mkString(",")` in the auto-generated code)
       * @return A sequence with the elements converted to (possibly empty) strings with commas inserted correctly
       */
-    private def els2Str(els: List[Element]): List[String]= els match {
+    private def els2Str(els: List[Element], startsObject: Boolean): List[String]= els match {
       case Nil => Nil
-      case a :: b => el2Str(a, isFirst = true) :: b.map(el => el2Str(el, isFirst = false))
+      case a :: b => el2Str(a, isFirst = startsObject) :: b.map(el => el2Str(el, isFirst = false))
     }
 
     /** Utility for inserting commans correctly between non-empty elements*/
