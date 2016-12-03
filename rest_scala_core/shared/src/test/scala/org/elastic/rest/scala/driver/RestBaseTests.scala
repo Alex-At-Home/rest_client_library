@@ -6,8 +6,8 @@ import utest._
 
 case class ValueClassTest(value: String) extends AnyVal with ToStringAnyVal[String]
 object ValueClassTest {
-  @Constant val test: ValueClassTest = ToStringAnyVal.Value
-  @Constant val testA, testB: ValueClassTest = ToStringAnyVal.Value
+  @Constant val test = ToStringAnyVal.AutoGenerate[ValueClassTest]
+  @Constant val testA, testB = ToStringAnyVal.AutoGenerate[ValueClassTest]
 }
 
 object RestBaseTests extends TestSuite {

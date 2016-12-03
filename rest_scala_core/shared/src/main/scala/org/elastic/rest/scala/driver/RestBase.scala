@@ -51,7 +51,7 @@ object RestBase {
   /** Constants used in value class helpers */
   object ToStringAnyVal {
     /** Placeholder that gets filled in by the `@Constant` annotation */
-    val Value = null
+    def AutoGenerate[T] = null.asInstanceOf[T]
   }
 
   /** Parent type for Modifiers to resources (representing URL parameters)

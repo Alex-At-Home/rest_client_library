@@ -106,17 +106,17 @@ object MacroUtils {
     val newMethod = annottees map (_.tree) toList match {
       case (valDef: ValDef) :: Nil =>
         valDef match {
-          case q"val $varName: $retType = $body" =>
+          case q"val $varName: $retType1 = ToStringAnyVal.AutoGenerate[$retType2]" =>
             val varNameStr = s"${varName.toString}"
-            q"""val $varName: $retType = new $retType($varNameStr)"""
+            q"""val $varName: $retType2 = new $retType2($varNameStr)"""
 
           case x @ _ => c.abort(c.enclosingPosition,
-            s"Invalid annottee (2) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.Value vs $x"
+            s"Invalid annottee (2) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.AutoGenerate[T] vs $x"
           )
         }
 
       case x @ _ => c.abort(c.enclosingPosition,
-        s"Invalid annottee (1) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.Value vs $x"
+        s"Invalid annottee (1) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.AutoGenerate[T] vs $x"
       )
     }
     c.Expr[Any]{ newMethod }
