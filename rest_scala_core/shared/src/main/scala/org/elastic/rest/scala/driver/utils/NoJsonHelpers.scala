@@ -11,9 +11,16 @@ import scala.language.experimental.macros
   */
 object NoJsonHelpers {
 
+  /** Enables use of value classes for (eg) string constants */
+  trait ToStringAnyVal[T] extends Any {
+    /** The underlying value */
+    def value: T
+    override def toString: String = value.toString
+  }
+
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWithDataReadableTU[D <: Modifier, I <: CustomTypedToString]
-    (val resource: RestWithDataReadableTU[D, I] with RestResource)
+  (val resource: RestWithDataReadableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataReadableTU[D, I]
   {
     @MacroUtils.OpType("GET")
@@ -22,7 +29,7 @@ object NoJsonHelpers {
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperSendableTU[D <: Modifier, I <: CustomTypedToString]
-    (val resource: RestSendableTU[D, I] with RestResource)
+  (val resource: RestSendableTU[D, I] with RestResource)
     extends TypedToStringHelperSendableTU[D, I]
   {
     @MacroUtils.OpType("POST")
@@ -31,7 +38,7 @@ object NoJsonHelpers {
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWritableTU[D <: Modifier, I <: CustomTypedToString]
-    (val resource: RestWritableTU[D, I] with RestResource)
+  (val resource: RestWritableTU[D, I] with RestResource)
     extends TypedToStringHelperWritableTU[D, I]
   {
     @MacroUtils.OpType("PUT")
@@ -40,7 +47,7 @@ object NoJsonHelpers {
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWithDataDeletableTU[D <: Modifier, I <: CustomTypedToString]
-    (val resource: RestWithDataDeletableTU[D, I] with RestResource)
+  (val resource: RestWithDataDeletableTU[D, I] with RestResource)
     extends TypedToStringHelperWithDataDeletableTU[D, I]
   {
     @MacroUtils.OpType("DELETE")
@@ -51,42 +58,42 @@ object NoJsonHelpers {
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWithDataReadableTT[D <: Modifier, I <: CustomTypedToString, O]
-    (val resource: RestWithDataReadableTT[D, I, O] with RestResource)
+  (val resource: RestWithDataReadableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataReadableTT[D, I, O]
   {
     @MacroUtils.OpType("GET")
     override def read(body: I): D with TypedDriverOp[O] =
-      macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
+    macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
   }
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperSendableTT[D <: Modifier, I <: CustomTypedToString, O]
-    (val resource: RestSendableTT[D, I, O] with RestResource)
+  (val resource: RestSendableTT[D, I, O] with RestResource)
     extends TypedToStringHelperSendableTT[D, I, O]
   {
     @MacroUtils.OpType("POST")
     override def send(body: I): D with TypedDriverOp[O] =
-      macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
+    macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
   }
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWritableTT[D <: Modifier, I <: CustomTypedToString, O]
-    (val resource: RestWritableTT[D, I, O] with RestResource)
+  (val resource: RestWritableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWritableTT[D, I, O]
   {
     @MacroUtils.OpType("PUT")
     override def write(body: I): D with TypedDriverOp[O] =
-      macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
+    macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
   }
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWithDataDeletableTT[D <: Modifier, I <: CustomTypedToString, O]
-    (val resource: RestWithDataDeletableTT[D, I, O] with RestResource)
+  (val resource: RestWithDataDeletableTT[D, I, O] with RestResource)
     extends TypedToStringHelperWithDataDeletableTT[D, I, O]
   {
     @MacroUtils.OpType("DELETE")
     override def delete(body: I): D with TypedDriverOp[O] =
-      macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
+    macro MacroUtils.materializeOpImpl_CBodyCustom_TypedOutput[D, I, O]
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -111,7 +118,7 @@ object NoJsonHelpers {
     /** Sealed trait defining the simple DSL for describing */
     sealed trait Element
 
-    /** Build an object in the `SimpleObjectDescription` DSL
+    /** Build an object in the `SimpleObjectDescription` DSL, ie mapping to `{ $els }`
       *
       * @param els The contents of the object
       */
@@ -140,10 +147,11 @@ object NoJsonHelpers {
 
     /** Inserts a map of key-value pairs into an object, where the key and value are both taken from the
       * constructor params of the case class
+      * Maps to `k1: v1, k2: v2, ...` ie MUST BE WRAPPED IN `SimpleObject`
       *
       * @param keyValuesParam  The name of the ctor param that will represent the map of key/value
       * @param prefix     A prefix to be inserted before the key
-      * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+      * @param valueParamName If `extras` are specified then the value is mapped into an object together with the extras
       *                       - this parameter specifies the name that is used for the key at which the value
       *                       is injected
       * @param extras     A list of additional elements ... if these are present then the `valueParam`
@@ -167,7 +175,7 @@ object NoJsonHelpers {
         /** Inserts a map of key-value pairs into an object, where the key and value are both taken from the
           * constructor params of the case class
           *
-          * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+          * @param valueParamName If `extras` are specified then the value is mapped into an object together with the extras
           *                       - this parameter specifies the name that is used for the key at which the value
           *                       is injected
           * @param extras     A list of additional elements ... if these are present then the `valueParam`
@@ -191,11 +199,12 @@ object NoJsonHelpers {
 
     /** Inserts a key-value pair into an object, where the key and value are both taken from the
       * constructor params of the case class
+      * Maps to `k1: v1` or `k1: { v: v1, $extras }` ie MUST BE WRAPPED IN `SimpleObject`
       *
       * @param keyParam   The name of the ctor param that will represent the key
       * @param valueParam The name of the ctor param that will represent the value
       * @param prefix     A prefix to be inserted before the key
-      * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+      * @param valueParamName If `extras` are specified then the value is mapped into an object together with the extras
       *                       - this parameter specifies the name that is used for the key at which the value
       *                       is injected
       * @param extras     A list of additional elements ... if these are present then the `valueParam`
@@ -203,7 +212,7 @@ object NoJsonHelpers {
       *                   and the extras are injected along side (ie at the same level)
       */
     case class KeyValue
-      (keyParam: String, valueParam: Element, prefix: String, valueParamName: String, extras: Element*) extends Element
+    (keyParam: String, valueParam: Element, prefix: String, valueParamName: String, extras: Element*) extends Element
 
     /** Constructor for a key/value pair in the `SimpleObjectDescription` DSL */
     object KeyValue {
@@ -217,7 +226,7 @@ object NoJsonHelpers {
 
         /**
           * @param valueParam The object DSL (object or raw value) that is injected under key `keyParam`
-          * @param valueParamName If extras are specified then the value is mapped into an object together with the extras
+          * @param valueParamName If `extras` are specified then the value is mapped into an object together with the extras
           *                       - this parameter specifies the name that is used for the key at which the value
           *                       is injected
           * @param extras     A list of additional elements ... if these are present then the `valueParam`
@@ -254,6 +263,7 @@ object NoJsonHelpers {
       * pair isn't inserted, (if there is 1 value, it is inserted as either value or single-value-array (depending on
       * `arrayIfSingleton`), and if there are >1 then it is inserted as an array
       * Also works for Map, where it simply does not display the field if the map is empty
+      * Maps to `k: v` or `k: [ v1, v2, ... ]` ie MUST BE WRAPPED IN `SimpleObject`
       *
       * @param fieldParam The case class parameter containing the field value
       * @param arrayIfSingleton If false (defaults to true)
@@ -264,6 +274,7 @@ object NoJsonHelpers {
     /** This inserts a key/val pair into an object, where the key is given by the `fieldParam` string,
       * and the value is given by the case class parameter of that name
       * If the `fieldParam` is an `Option` then it is only inserted if present (etc)
+      * Maps to `k: v` ie MUST BE WRAPPED IN `SimpleObject`
       *
       * @param fieldParam The name of the ctor param that will represent the field (and contain its value)
       * @param prefix     A prefix to be inserted before the key
@@ -271,6 +282,7 @@ object NoJsonHelpers {
     case class Field(fieldParam: String, prefix: String = "") extends Element
 
     /** Inserts a constant key/value pair with the designated values into an object
+      * Maps to `k: v` ie MUST BE WRAPPED IN `SimpleObject`
       *
       * @param field The key name
       * @param value The value (should be a `CustomTypedToString`, `Seq`, `String`, `Long`, `Double`, `Integer` or
@@ -279,13 +291,13 @@ object NoJsonHelpers {
     case class Constant(field: String, value: Any) extends Element
 
     /** Inserts a raw value based on the `field` variable (with no key - ie can break JSON format
-      * and can only be used as the `element` param for a `KeyValue` element)
+      * and can only be used as the `element` param for a `KeyValue` or `KeyValues` element)
       * @param field The variable whose value(s) to insert (with no key - ie can break JSON format)
       */
     case class FieldValue(field: String) extends Element
 
     /** Inserts a raw constant value (with no key - ie can break JSON format
-      * and can only be used as the `element` param for a `KeyValue` element)
+      * and can only be used as the `element` param for a `KeyValue` or `KeyValues` element)
       * @param value The value to insert (with no key - ie can break JSON format)
       */
     case class ConstantValue(value: Any) extends Element
@@ -294,48 +306,67 @@ object NoJsonHelpers {
 
     //TODO: need to pass in an "allowed values" enum set that generates compile-time errors if invalid JSON is generated
     // (eg `ConstantValue` and `FieldValue` are only allowed as element params to `KeyValue`))
+    // Until then there is "compile-time-valid" declarations that will result in runtime errors, which is not ideal
 
     /** Converts an element in the simple object description DSL into a string
+      *  (Called as part of macro only)
       * @param el The DSL element to convert
       * @param isFirst Is the first element in a seq, ie shouldn't prepend a comma regardless
-      * @return The converted string
+      * @return A string that can be compiled into runtime code
       */
     def el2Str(el: Element, isFirst: Boolean): String = el match {
 
       case SimpleObject(els @ _*) =>
-        s""" { ${els2Str(els.toList, startsObject = true).mkString(" ")} } """
+        // 2 important notes here:
+        //1] (no leading "," here ever - the only case where that can happen is if it's in an array, which is handled
+        //    by the array itself) - hence why there's no `addComma` here
+        //2] Also ... there's a big problem with handling the first element(s) being missing `Option`s because
+        //   (unlike `KeyValues` below) the logic can be nested inside the runtime code (`el2Str` vs `any2Str`)
+        //   That's the reason for the nasty extra `${'$'}` and the `replaceFirst` construct
+        val embeddedStr = els2Str(els.toList, startsObject = true).mkString(" ")
+        s"""${'$'}{ s\"\"\" {  $embeddedStr } \"\"\".replaceFirst("^[ ]*[{][ ]*,", " { ") }"""
 
-      case KeyValues(keyValuesParam, prefix, valueParamName, extras @ _*) => //TODO: handle extras here, until then error at compile time
+      case KeyValues(keyValuesParam, prefix, valueParamName, extras @ _*) =>
+        //TODO: handle extras here, until then error at compile time (see note below)
+
+        // Note that adding `extras` is a significant refactoring effort due to el2Str not being useable at
+        // runtime (only macro time), so the foldLeft (at runtime) construct below doesn't work at all.).
+        // So likely to get left this way for the foreseeable future
+
         if (extras.nonEmpty)
           throw new Exception(s"Cannot currently specify 'extras' in KeyValues declaration, please contact developer")
 
+        //(note that the leading "," is inserted by the any2Str call)
         s"""${'$'}{$keyValuesParam.foldLeft("") { (acc, kv) =>
              acc + any2Str(kv._1, "$prefix", kv._2, $isFirst && acc.trim().isEmpty)
           }
         }"""
 
-      case KeyValue(keyParam, valueParam, prefix, valueParamName, extras @ _*) => //TODO: need to handle the case where keyParam is `None`?
-        val actualKey = s"""${'$'}{"$prefix" + $keyParam}"""
-        val bodyLogic = extras match {
-          case Seq() => s"${el2Str(valueParam, isFirst = true)}"
+      case KeyValue(keyParam, valueParam, prefix, valueParamName, extras @ _*) =>
+        val actualKeyStr = s"""${'$'}{"$prefix" + $keyParam}"""
+        val mainValStr = el2Str(valueParam, isFirst = true)
+        val bodyLogicStr = extras match {
+          case Seq() => s"$mainValStr"
           case _ =>
-            // eg here extras need to be a key value pair
+            // Unlike the use of `els2Str` under `SimpleObject`, this case is fine because we always want
+            // a leading `,` because of the `k: v` clause that is guaranteed to provide it
+            val extraStr = els2Str(extras.toList, startsObject = false).mkString(" ")
             s"""
              ${'$'}{
-                val extras = s\"\"\"${els2Str(extras.toList, startsObject = false).mkString(" ")}\"\"\"
+                val extras = s\"\"\"$extraStr\"\"\"
                 if (extras.trim().isEmpty()) {
-                  s\"\"\"  ${el2Str(valueParam, isFirst = true)} \"\"\"
+                  s\"\"\"  $mainValStr \"\"\"
                 }
                 else {s\"\"\"{
-                    "$valueParamName": ${el2Str(valueParam, isFirst = true)}
-                    ${els2Str(extras.toList, startsObject = false).mkString(" ")}
+                    "$valueParamName": $mainValStr
+                    $extraStr
                   }\"\"\"
                 }
              }"""
         }
-        s""" ${addComma(isFirst)} "$actualKey": $bodyLogic """
+        s""" ${addComma(isFirst)} "$actualKeyStr": $bodyLogicStr """
 
-      case MultiTypeField(fieldParam, arrayIfSingleton, prefix) => //TODO: (do we need extras here?)
+      case MultiTypeField(fieldParam, arrayIfSingleton, prefix) =>
         s"""${'$'}{$fieldParam match {
           case m: Map[_, _] if m.isEmpty => ""
           case Seq() => ""
@@ -343,10 +374,10 @@ object NoJsonHelpers {
           case _ => any2Str("$fieldParam", "$prefix", $fieldParam, $isFirst)
         }}"""
 
-      case Field(fieldParam, prefix) => //TODO: (do we need extras here?)
+      case Field(fieldParam, prefix) =>
         s""" ${'$'}{any2Str("$fieldParam", "$prefix", $fieldParam, $isFirst)} """
 
-      case Constant(field, value) => //TODO: (do we need extras here?)
+      case Constant(field, value) =>
         s""" ${any2Str(field, "", value, isFirst)} """
 
       case FieldValue(field) =>
@@ -357,13 +388,14 @@ object NoJsonHelpers {
     }
 
     /** Converts any supported type into a string
+      * (Can be called either as part of macro or as part of runtime)
       * @param key The key at which to inject the value
       * @param any The value to be injected
       * @param isFirst Is the first element in a seq, ie shouldn't prepend a comma regardless
-      * @return An embeddable string
+      * @return An embeddable string representing the key value pair
       */
     def any2Str(key: String, prefix: String, any: Any, isFirst: Boolean): String = any match {
-      case (_:String | _:Boolean | _:Integer | _:Long | _:Float | _:Double | _:Element | _:CustomTypedToString) =>
+      case (_:String | _:Boolean | _:Integer | _:Long | _:Float | _:Double | _:Element | _:ToStringAnyVal[_] | _:CustomTypedToString) =>
         s"""  ${addComma(isFirst)} "$prefix${removeBackTicks(key)}": ${any2Str(any)} """
 
       case e: Either[_, _] => any2Str(key, prefix, e.fold[Any](l => l, r => r), isFirst)
@@ -377,8 +409,12 @@ object NoJsonHelpers {
     }
 
     /** Converts any supported type into a string
+      * (Can be called either as part of macro or as part of runtime - note that the
+      * `case el: Element` in theory can break this but in practice can only be called within the macro,
+      * at least except in pathological cases)
+      *
       * @param any The value to be injected
-      * @return An embeddable string
+      * @return An embeddable string representing a value
       */
     def any2Str(any: Any): String = any match {
       case s: String => s""" "$s" """
@@ -388,6 +424,7 @@ object NoJsonHelpers {
       case f: Float => s""" $f """
       case d: Double => s""" $d """
       case el: Element => el2Str(el, isFirst = true) //(adding command handled by calling version of any2Str)
+      case t: ToStringAnyVal[_] => any2Str(t.value)
       case custom: CustomTypedToString => custom.fromTyped
       case seq: Seq[_] => s""" [ ${seq.map(c => any2Str(c)).mkString(",")} ] """
       case map: Map[_, _] => s""" { ${map.map { case (k, v) => s""" "$k": ${any2Str(v)} """}.mkString(",")} } """
@@ -397,11 +434,14 @@ object NoJsonHelpers {
     /** Converts a sequence of elements into a sequence of strings with commas correctly inserted
       * (handling potentially empty elements - this is only known at runtime, so can't just use
       *  `mkString(",")` in the auto-generated code)
-      * @return A sequence with the elements converted to (possibly empty) strings with commas inserted correctly
+      *  (Called as part of macro only)
+      * @return A sequence with the elements converted to (possibly empty) compilable-to-runtime code strings
+      *         (with commas inserted almost correctly ... see the additional logic called where `els2Str` is
+      *          called for more details)
       */
     private def els2Str(els: List[Element], startsObject: Boolean): List[String]= els match {
       case Nil => Nil
-      case a :: b => el2Str(a, isFirst = startsObject) :: b.map(el => el2Str(el, isFirst = false))
+      case a :: tail => el2Str(a, isFirst = startsObject) :: tail.map(el => el2Str(el, isFirst = false))
     }
 
     /** Utility for inserting commans correctly between non-empty elements*/
