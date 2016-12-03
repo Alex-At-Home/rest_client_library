@@ -65,7 +65,8 @@ object CirceJsonModuleTests extends TestSuite {
       intercept[Exception] { DeclareJsonFromStringTest("not_json_obj").asJson }
       DeclareJsonFromStringTest("{}").asJson ==> parse("{}").right.get.asObject.get
       DeclareJsonFromStringTest("{}").asRawJson ==> parse("{}").right.get
-      DeclareJsonFromStringTest("not_json_obj").asParsedRawJson ==> parse("not_json_obj")
+      DeclareJsonFromStringTest("not_json_obj")
+        .asParsedRawJson.left.get.message ==> parse("not_json_obj").left.get.message //(JS won't match the errors)
       DeclareJsonFromStringTest("{}").asParsedRawJson ==> parse("{}")
 
       DeclareJsonFromStringTest("{}").getTest ==> "default"
