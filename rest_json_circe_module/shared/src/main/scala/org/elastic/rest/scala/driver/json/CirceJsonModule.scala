@@ -71,6 +71,8 @@ object CirceJsonModule {
     def registerTyped[T](lens: monocle.Traversal[Json, T]): List[T] = lens.getAll(asRawJson)
     /** Maps a lens to a JSON object to its actual (optional) value */
     def registerJson(lens: monocle.Optional[Json, Json]): Option[JsonObject] = lens.getOption(asRawJson).flatMap(_.asObject)
+    /** Maps a lens to a JSON object to its actual  value using a default if it doesn't exist */
+    def registerJson(lens: monocle.Optional[Json, Json], default: JsonObject): JsonObject = lens.getOption(asRawJson).flatMap(_.asObject).getOrElse(default)
     /** Maps a lens to an array of JSON objects to a list (empty if not present) */
     def registerJson(lens: monocle.Traversal[Json, Json]): List[JsonObject] = lens.getAll(asRawJson).flatMap(_.asObject)
   }
