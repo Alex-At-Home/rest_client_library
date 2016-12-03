@@ -323,6 +323,7 @@ object NoJsonHelpers {
         //2] Also ... there's a big problem with handling the first element(s) being missing `Option`s because
         //   (unlike `KeyValues` below) the logic can be nested inside the runtime code (`el2Str` vs `any2Str`)
         //   That's the reason for the nasty extra `${'$'}` and the `replaceFirst` construct
+        //TODO: might want to write a faster custom `replaceFirst` here?
         val embeddedStr = els2Str(els.toList, startsObject = true).mkString(" ")
         s"""${'$'}{ s\"\"\" {  $embeddedStr } \"\"\".replaceFirst("^[ ]*[{][ ]*,", " { ") }"""
 
