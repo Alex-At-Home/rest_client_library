@@ -84,12 +84,39 @@ object MacroUtils {
                this.asInstanceOf[BaseDriverOp].withModifier(($methodNameStr, $fieldName)).asInstanceOf[this.type]
             }"""
           case x @ _ => c.abort(c.enclosingPosition,
-            s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+            s"Invalid annottee (2) - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
           )
         }
 
       case x @ _ => c.abort(c.enclosingPosition,
-        s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+        s"Invalid annottee (1) - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+      )
+    }
+    c.Expr[Any]{ newMethod }
+  }
+
+  /** Injects the name of the constant into the constructor
+    * @param c Whitebox macro context
+    * @param annottees The code to annotate
+    * @return The overwritten method
+    */
+  def constantImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+
+    val newMethod = annottees map (_.tree) toList match {
+      case (valDef: ValDef) :: Nil =>
+        valDef match {
+          case q"val $varName: $retType = $body" =>
+            val varNameStr = s"${varName.toString}"
+            q"""val $varName: $retType = new $retType($varNameStr)"""
+
+          case x @ _ => c.abort(c.enclosingPosition,
+            s"Invalid annottee (2) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.Value vs $x"
+          )
+        }
+
+      case x @ _ => c.abort(c.enclosingPosition,
+        s"Invalid annottee (1) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.Value vs $x"
       )
     }
     c.Expr[Any]{ newMethod }

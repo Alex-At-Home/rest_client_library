@@ -1,6 +1,6 @@
 package org.elastic.rest.scala.driver.utils
 
-import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, RestResource, TypedDriverOp}
+import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestBaseImplicits.{CustomTypedToString, _}
 import org.elastic.rest.scala.driver.RestResources._
 
@@ -10,13 +10,6 @@ import scala.language.experimental.macros
 /** Helper implicits for custom types
   */
 object NoJsonHelpers {
-
-  /** Enables use of value classes for (eg) string constants */
-  trait ToStringAnyVal[T] extends Any {
-    /** The underlying value */
-    def value: T
-    override def toString: String = value.toString
-  }
 
   /** Typed input case */
   implicit class NoJsonTypedStringToTypeHelperWithDataReadableTU[D <: Modifier, I <: CustomTypedToString]
