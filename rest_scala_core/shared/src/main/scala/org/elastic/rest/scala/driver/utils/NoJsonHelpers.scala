@@ -283,6 +283,13 @@ object NoJsonHelpers {
       */
     case class Constant(field: String, value: Any) extends Element
 
+    /**
+      * Inserts a key based on the value of the `field` variable (with no value, ie can break JSON
+      * format unless used specifically in front of `FieldValue` or `ConstantValue` or `SimpleObject`
+      * @param key The name of the variable that determines the key
+      */
+    case class FieldKey(key: String) extends Element
+
     /** Inserts a raw value based on the `field` variable (with no key - ie can break JSON format
       * and can only be used as the `element` param for a `KeyValue` or `KeyValues` element)
       * @param field The variable whose value(s) to insert (with no key - ie can break JSON format)
@@ -373,6 +380,9 @@ object NoJsonHelpers {
 
       case Constant(field, value) =>
         s""" ${any2Str(field, "", value, isFirst)} """
+
+      case FieldKey(key) =>
+        s""" ${'$'}{any2Str($key)}: """
 
       case FieldValue(field) =>
         s""" ${'$'}{any2Str($field)} """
