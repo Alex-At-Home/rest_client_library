@@ -23,7 +23,7 @@ object MyBuild extends Build {
 
   // Dependencies:
 
-  val circeVersion = "0.4.1"
+  val circeVersion = "0.6.0"
   val utestJvmVersion = "0.4.3"
   val rosHttpVersion = "2.0.0-RC1"
 
@@ -60,6 +60,12 @@ object MyBuild extends Build {
           autoAPIMappings := true,
           libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaBuildVersion,
           libraryDependencies += "com.lihaoyi" %%% "utest" % utestJvmVersion % "test",
+          libraryDependencies ++= Seq(
+              "io.circe" %%% "circe-core",
+              "io.circe" %%% "circe-generic",
+              "io.circe" %%% "circe-parser"
+            )
+            .map(_ % circeVersion % "test"),
           testFrameworks += new TestFramework("utest.runner.Framework")
         ): _*)
       .jvmSettings()
@@ -82,7 +88,8 @@ object MyBuild extends Build {
         libraryDependencies ++= Seq(
             "io.circe" %%% "circe-core",
             "io.circe" %%% "circe-generic",
-            "io.circe" %%% "circe-parser"
+            "io.circe" %%% "circe-parser",
+            "io.circe" %%% "circe-optics"
           )
           .map(_ % circeVersion),
         testFrameworks += new TestFramework("utest.runner.Framework")

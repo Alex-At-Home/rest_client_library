@@ -34,6 +34,26 @@ object RestBase {
     def macroTransform(annottees: Any*) = macro MacroUtils.modifierImpl
   }
 
+  /** An annotation that provides a constructor for the `val` (must be of type `ToStringAnyVal[String]`)
+    * that injects the name of the variable as the constructor arg
+    */
+  class Constant() extends StaticAnnotation {
+    def macroTransform(annottees: Any*) = macro MacroUtils.constantImpl
+  }
+
+  /** Enables use of value classes for (eg) string constants - must be mixed with AnyVal */
+  trait ToStringAnyVal[T] extends Any { self: AnyVal =>
+    /** The underlying value */
+    def value: T
+    override def toString: String = value.toString
+
+  }
+  /** Constants used in value class helpers */
+  object ToStringAnyVal {
+    /** Placeholder that gets filled in by the `@Constant` annotation */
+    def AutoGenerate[T <: ToStringAnyVal[_]] = null.asInstanceOf[T]
+  }
+
   /** Parent type for Modifiers to resources (representing URL parameters)
     * (eg `String*`)
     * Each method in Modifier should be in one of the following formats:
@@ -56,6 +76,7 @@ object RestBase {
       case (k, v) =>
         val paramVal = v match {
           case s: Seq[_] => s.mkString(",")
+          case t: ToStringAnyVal[_] => t.toString
           case toStr: AnyRef => toStr.toString
         }
         s"$k=$paramVal"

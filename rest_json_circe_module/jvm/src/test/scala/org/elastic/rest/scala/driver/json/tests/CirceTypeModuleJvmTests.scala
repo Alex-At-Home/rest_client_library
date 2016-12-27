@@ -2,22 +2,23 @@ package org.elastic.rest.scala.driver.json.tests
 
 import java.util.concurrent.TimeUnit
 
-import io.circe._
-import io.circe.generic.JsonCodec
-import io.circe.parser.parse
 import org.elastic.rest.scala.driver.RestBase
 import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.RestBaseImplicits._
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.utils.MockRestDriver
-import org.elastic.rest.scala.driver.json.CirceJsonModule._
-import org.elastic.rest.scala.driver.json.CirceTypeModule._
+import org.elastic.rest.scala.driver.json.fixed_typing.CirceTypeModule._
 import utest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
+/** Register all concrete output types here, note has to be at the top of the file */
+object JvmConcreteTypes {
+  implicit val RegisterTestRead = new RegisterType[JvmTestDataModel.TestRead] {}
+  implicit val RegisterTestWrapperRead = new RegisterType[JvmTestDataModel.TestWrapperRead] {}
+}
 object CirceTypeModuleJvmTests extends TestSuite {
 
   val tests = this {
@@ -38,12 +39,14 @@ object CirceTypeModuleJvmTests extends TestSuite {
 
     "Test macro version of typed (read)" - {
       implicit val mockDriver = new MockRestDriver(macroHandler)
+      import JvmConcreteTypes._
 
-      JvmTestApiTyped.`/typed`().read().result().get ==>  JvmTestDataModel.TestRead("get")
+      JvmTestApiTyped.`/typed`().read().result().get ==> JvmTestDataModel.TestRead("get")
     }
     "Test custom typed extensions (read)" - {
       implicit val mockDriver = new MockRestDriver(customHandler)
       val timeout = Duration(10, TimeUnit.SECONDS)
+      import JvmConcreteTypes._
 
       JvmTestApiTyped.`/custom_typed`().read().result(timeout).get ==> JvmTestDataModel.TestWrapperRead(
         """{ "testRead": "get" }""")
@@ -55,16 +58,14 @@ object CirceTypeModuleJvmTests extends TestSuite {
   * (sidenote: annotating `TestDataModel` doesn't make `TestDataModelComponent` visible)
   */
 object JvmTestDataModel extends JvmTestDataModelComponent{
-  @JsonCodec case class TestRead(testRead: String)
-  @JsonCodec case class TestWrite(testWrite: String)
+  case class TestRead(testRead: String)
 }
 
 /**Illustrates the case where sub-components are used to partition
   * the code
   */
 trait JvmTestDataModelComponent {
-  @JsonCodec case class OtherTestRead(testRead: String)
-  @JsonCodec case class OtherTestWrite(testWrite: String)
+  case class OtherTestRead(testRead: String)
 
   case class TestWrapperWrite(s: String) extends CustomTypedToString {
     def fromTyped: String = s"""{"testWrite":"$s"}"""
@@ -77,17 +78,14 @@ trait JvmTestDataModelComponent {
 object JvmTestApiTyped extends JvmTestApiTypedExtensions {
   case class `/typed`()
     extends RestReadableT[Modifier, JvmTestDataModel.TestRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.TestWrite]
       with RestResource
 }
 trait JvmTestApiTypedExtensions {
   case class `/data_model`()
     extends RestReadableT[Modifier, JvmTestDataModel.OtherTestRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.OtherTestWrite]
       with RestResource
 
   case class `/custom_typed`()
     extends RestReadableT[Modifier, JvmTestDataModel.TestWrapperRead]
-      with RestWritableTU[Modifier, JvmTestDataModel.TestWrapperWrite]
       with RestResource
 }

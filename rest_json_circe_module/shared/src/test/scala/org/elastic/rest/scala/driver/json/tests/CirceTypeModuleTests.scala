@@ -1,7 +1,6 @@
 package org.elastic.rest.scala.driver.json.tests
 
 import io.circe._
-import io.circe.generic.JsonCodec
 import io.circe.parser.parse
 import org.elastic.rest.scala.driver.RestBase
 import org.elastic.rest.scala.driver.RestBase._
@@ -9,12 +8,17 @@ import org.elastic.rest.scala.driver.RestBaseImplicits._
 import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.utils.MockRestDriver
 import org.elastic.rest.scala.driver.json.CirceJsonModule._
-import org.elastic.rest.scala.driver.json.CirceTypeModule._
+import org.elastic.rest.scala.driver.json.flexible_typing.CirceTypeModule._
 import utest._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+/** Register all concrete output types here, note has to be at the top of the file */
+object ConcreteTypes {
+  implicit val RegisterTestRead = new RegisterType[TestDataModel.TestRead] {}
+  implicit val RegisterTestWrapperRead = new RegisterType[TestDataModel.TestWrapperRead] {}
+}
 object CirceTypeModuleTests extends TestSuite {
 
   val tests = this {
@@ -41,6 +45,7 @@ object CirceTypeModuleTests extends TestSuite {
 
     "Test macro version of typed (read)" - {
       implicit val mockDriver = new MockRestDriver(macroHandler)
+      import ConcreteTypes._
 
       TestApiTyped.`/typed`().read().exec().map { result =>
         result ==>  TestDataModel.TestRead("get")
@@ -50,11 +55,12 @@ object CirceTypeModuleTests extends TestSuite {
       implicit val mockDriver = new MockRestDriver(macroHandler)
 
       TestApiTyped.`/typed`().write(TestDataModel.TestWrite("write")).execJ().map { result =>
-        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
       }
     }
     "Test custom typed extensions (read)" - {
       implicit val mockDriver = new MockRestDriver(customHandler)
+      import ConcreteTypes._
 
       TestApiTyped.`/custom_typed`().read().exec().map { result =>
         result ==> TestDataModel.TestWrapperRead("""{ "testRead": "get" }""")
@@ -64,7 +70,7 @@ object CirceTypeModuleTests extends TestSuite {
       implicit val mockDriver = new MockRestDriver(customHandler)
 
       TestApiTyped.`/custom_typed`().write(TestDataModel.TestWrapperWrite("write")).execJ().map { result =>
-        result ==> parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        result ==> parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
       }
     }
   }
@@ -74,16 +80,16 @@ object CirceTypeModuleTests extends TestSuite {
   * (sidenote: annotating `TestDataModel` doesn't make `TestDataModelComponent` visible)
   */
 object TestDataModel extends TestDataModelComponent{
-  @JsonCodec case class TestRead(testRead: String)
-  @JsonCodec case class TestWrite(testWrite: String)
+  case class TestRead(testRead: String)
+  case class TestWrite(testWrite: String)
 }
 
 /**Illustrates the case where sub-components are used to partition
   * the code
   */
 trait TestDataModelComponent {
-  @JsonCodec case class OtherTestRead(testRead: String)
-  @JsonCodec case class OtherTestWrite(testWrite: String)
+  case class OtherTestRead(testRead: String)
+  case class OtherTestWrite(testWrite: String)
 
   case class TestWrapperWrite(s: String) extends CustomTypedToString {
     def fromTyped: String = s"""{"testWrite":"$s"}"""

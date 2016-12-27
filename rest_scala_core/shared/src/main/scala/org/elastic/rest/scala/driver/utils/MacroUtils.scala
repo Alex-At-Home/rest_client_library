@@ -4,9 +4,11 @@ import org.elastic.rest.scala.driver.RestBase.{BaseDriverOp, Modifier, TypedDriv
 import org.elastic.rest.scala.driver.RestBaseImplicits.JsonToStringHelper
 import org.elastic.rest.scala.driver.RestBaseRuntimeTyped.RuntimeTypedToStringHelper
 import org.elastic.rest.scala.driver.RestBaseImplicits._
+import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription
 
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros._
+import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
 
 // $COVERAGE-OFF$Macro coverage seems broken
 
@@ -15,11 +17,60 @@ import scala.reflect.macros._
   */
 object MacroUtils {
 
-  /**
-    * Injects the name of the method into the parameter
+  /** Fills in `fromTyped` method given the object description
     * @param c Whitebox macro context
     * @param annottees The code to annotate
-    * @return
+    * @return The overwritten method
+    */
+  def simpleObjectDescriptionImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+
+    // Pull out the args
+    val (packageAlias, annotationArgs) = c.prefix.tree match {
+      case q"new $name( ${pkgAlias: String}, ..$params )" =>
+        (pkgAlias, params.map { p => p.asInstanceOf[c.Tree] }.map { p => c.Expr[Any](p) })
+      case _ => c.abort(c.enclosingPosition,
+        s"Invalid SimpleObjectDescription - must have at least one parameter")
+    }
+    // Lift the macro args into a syntax tree that can be evaluated at compile time
+    val aliasedImportSelector = packageAlias match {
+      case "" => q""
+      case _ => c.parse(
+        s"import org.elastic.rest.scala.driver.utils.NoJsonHelpers.{SimpleObjectDescription => $packageAlias}")
+    }
+    val newExpr = q"""import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
+                      $aliasedImportSelector
+                      $annotationArgs
+        """
+    val evaluatedAnnotationArgs = c.eval(c.Expr[Seq[Element]](c.untypecheck(newExpr)))
+
+    // Build a string interpolation
+    val annotExpansion = "s\"\"\"" + el2Str(SimpleObject(evaluatedAnnotationArgs:_*), isFirst = true) + "\"\"\""
+
+    // Compile the string interpolation inside the `fromTyped` in the parent cse class
+    val newMethod = annottees map (_.tree) toList match {
+      case (methodDef: DefDef) :: Nil =>
+        methodDef match {
+          case q"$modifiers def fromTyped: String = $body" =>
+            q"""def fromTyped: String = {
+                import org.elastic.rest.scala.driver.utils.NoJsonHelpers.SimpleObjectDescription._
+                ${c.parse(annotExpansion)}
+            }"""
+          case x @ _ => c.abort(c.enclosingPosition,
+            s"Invalid annottee - needs to be method in format def fromTyped: String = SimpleObjectDescription.AutoGenerate vs $x"
+          )
+        }
+      case x @ _ => c.abort(c.enclosingPosition,
+        s"Invalid annottee - needs to be method in format def fromTyped: String = SimpleObjectDescription.AutoGenerate vs $x"
+      )
+    }
+    c.Expr[Any]{ newMethod }
+  }
+
+  /** Injects the name of the method into the parameter
+    * @param c Whitebox macro context
+    * @param annottees The code to annotate
+    * @return The overwritten method
     */
   def modifierImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
     import c.universe._
@@ -33,12 +84,39 @@ object MacroUtils {
                this.asInstanceOf[BaseDriverOp].withModifier(($methodNameStr, $fieldName)).asInstanceOf[this.type]
             }"""
           case x @ _ => c.abort(c.enclosingPosition,
-            s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+            s"Invalid annottee (2) - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
           )
         }
 
       case x @ _ => c.abort(c.enclosingPosition,
-        s"Invalid annottee - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+        s"Invalid annottee (1) - needs to be method in format def <name>(args: Any): this.type = Modifier.body vs $x"
+      )
+    }
+    c.Expr[Any]{ newMethod }
+  }
+
+  /** Injects the name of the constant into the constructor
+    * @param c Whitebox macro context
+    * @param annottees The code to annotate
+    * @return The overwritten method
+    */
+  def constantImpl(c: whitebox.Context)(annottees: c.Expr[Any]*): c.Expr[Any] = {
+    import c.universe._
+
+    val newMethod = annottees map (_.tree) toList match {
+      case (valDef: ValDef) :: Nil =>
+        valDef match {
+          case q"val $varName: $retType1 = ToStringAnyVal.AutoGenerate[$retType2]" =>
+            val varNameStr = s"${varName.toString}"
+            q"""val $varName: $retType2 = new $retType2($varNameStr)"""
+
+          case x @ _ => c.abort(c.enclosingPosition,
+            s"Invalid annottee (2) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.AutoGenerate[T] vs $x"
+          )
+        }
+
+      case x @ _ => c.abort(c.enclosingPosition,
+        s"Invalid annottee (1) - needs to be method in format val <name>: T <: ToStringAnyVal[String] = ToStringAnyVal.AutoGenerate[T] vs $x"
       )
     }
     c.Expr[Any]{ newMethod }
@@ -435,5 +513,3 @@ object MacroUtils {
     }
   }
 }
-
-// $COVERAGE-ON$

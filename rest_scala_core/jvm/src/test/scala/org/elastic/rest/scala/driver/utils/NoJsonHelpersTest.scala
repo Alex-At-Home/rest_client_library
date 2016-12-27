@@ -1,7 +1,6 @@
 package org.elastic.rest.scala.driver.utils
 
 import org.elastic.rest.scala.driver.RestBaseImplicits.CustomStringToTyped
-import org.elastic.rest.scala.driver.utils.NoJsonRuntimeHelpers
 import utest._
 
 object NoJsonRuntimeHelpersTest extends TestSuite {

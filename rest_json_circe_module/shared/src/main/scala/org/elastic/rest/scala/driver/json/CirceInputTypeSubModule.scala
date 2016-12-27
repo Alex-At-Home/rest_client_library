@@ -6,35 +6,13 @@ import org.elastic.rest.scala.driver.RestResources._
 import org.elastic.rest.scala.driver.json.utils.MacroUtils
 import org.elastic.rest.scala.driver.utils.MacroUtils.OpType
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{ExecutionContext, Future}
 import scala.language.experimental.macros
-import scala.util.Try
 
 /** Integration for CIRCE with REST drivers - handles typed APIs
+  * Only handles the input types - see `flexible_typing.CirceTypeModule` or `fixed_typing.CirceTypeModule`
+  * for output typing
   */
-object CirceTypeModule {
-
-  /** Typed outputs */
-  implicit class CirceTypedStringToTypeHelper[T](val typedOp: TypedDriverOp[T]) extends StringToTypedHelper[T] {
-
-    override def exec()(implicit driver: RestDriver, ec: ExecutionContext): Future[T] =
-      macro MacroUtils.execMaterialize[T]
-
-    override def result(timeout: Duration)(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      macro MacroUtils.resultMaterialize[T]
-
-    /** Actually executes the operation (sync), with default timeout
-      * This version uses the runtime implicits (JVM only and it is recommended to use the macro implicits where
-      * possible)
-      *
-      * @param driver The driver which executes the operation
-      * @param ec The execution context for futures
-      * @return The result of the operation as a type
-      */
-    def result()(implicit driver: RestDriver, ec: ExecutionContext): Try[T] =
-      macro MacroUtils.resultMaterializeNoTimeout[T]
-  }
+trait CirceInputTypeSubModule {
 
   // Lots of classes for the different typed inputs cases
 
@@ -114,3 +92,4 @@ object CirceTypeModule {
     override def delete(body: I): D with TypedDriverOp[O] = macro MacroUtils.writeTypedOutputMaterialize[D, I, O]
   }
 }
+object CirceInputTypeSubModule extends CirceInputTypeSubModule

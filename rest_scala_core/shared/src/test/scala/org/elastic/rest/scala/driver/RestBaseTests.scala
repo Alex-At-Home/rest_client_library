@@ -4,14 +4,19 @@ import org.elastic.rest.scala.driver.RestBase._
 import org.elastic.rest.scala.driver.test_utils.SampleResources._
 import utest._
 
-object RestBaseTests extends TestSuite {
+case class ValueClassTest(value: String) extends AnyVal with ToStringAnyVal[String]
+object ValueClassTest {
+  @Constant val test = ToStringAnyVal.AutoGenerate[ValueClassTest]
+  @Constant val testA, testB = ToStringAnyVal.AutoGenerate[ValueClassTest]
+}
 
+object RestBaseTests extends TestSuite {
 
   val tests = this {
     "Check modifiers work" - {
       trait SeqModifiers extends Modifier {
         @Param def getSeqModifier(ss: String*): this.type = Modifier.Body
-        @Param def getStringModifier2(s: String): this.type = Modifier.Body
+        @Param def getStringModifier2(s: ValueClassTest): this.type = Modifier.Body
       }
       trait OtherModifiers extends Modifier {
         @Param def getStringModifier(s: String): this.type = Modifier.Body
@@ -41,8 +46,15 @@ object RestBaseTests extends TestSuite {
       modTest.getBooleanModifier(true).mods.map(Modifier.asString) ==> List("getBooleanModifier=true")
       modTest.getListModifier(List("x", "y")).mods.map(Modifier.asString) ==> List("getListModifier=x,y")
       modTest.getSeqModifier("x", "y").mods.map(Modifier.asString) ==> List("getSeqModifier=x,y")
-      modTest.getStringModifier2("x").mods.map(Modifier.asString) ==> List("getStringModifier2=x")
+      modTest.getStringModifier2(ValueClassTest("x")).mods.map(Modifier.asString) ==> List("getStringModifier2=x")
       modTest.getSeqModifier2("x", "y").mods.map(Modifier.asString) ==> List("getSeqModifier2=x,y")
+    }
+    "Check that the value class helpers work" - {
+
+      ValueClassTest("test1").toString ==> "test1"
+      ValueClassTest.test.toString ==> "test"
+      ValueClassTest.testA.toString ==> "testA"
+      ValueClassTest.testB.toString ==> "testB"
     }
     "Check the location generator works" - {
       case class `/$list`(list: Seq[String]) extends RestResource

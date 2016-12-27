@@ -39,7 +39,7 @@ object CirceRuntimeTypeModuleTests extends TestSuite {
 
       Await.result(TestApiRuntimeTyped.`/typed`().write(TestRuntimeDataModel.TestWrite("write")).execJ(),
         Duration("1 second")) ==>
-          parse("""{ "test": "written" }""").getOrElse(Json.Null)
+          parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
     }
     "Test typed extensions" - {  // (originally found classes inside a trait that the base model extends didn't work)
 
@@ -59,7 +59,7 @@ object CirceRuntimeTypeModuleTests extends TestSuite {
 
       TestApiRuntimeTyped.`/data_model`()
         .write(TestRuntimeDataModel.OtherTestWrite("write")).resultJ(Duration("1 second")).get ==>
-        parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
     }
     "Test custom typed extensions" - {
       val handler: PartialFunction[BaseDriverOp, Future[String]] = {
@@ -77,13 +77,14 @@ object CirceRuntimeTypeModuleTests extends TestSuite {
         .read().result().get ==> TestRuntimeDataModel.TestWrapperRead("""{ "testRead": "get" }""")
 
       TestApiRuntimeTyped.`/custom_typed`().write(TestRuntimeDataModel.TestWrapperWrite("write")).resultJ().get ==>
-        parse("""{ "test": "written" }""").getOrElse(Json.Null)
+        parse("""{ "test": "written" }""").right.getOrElse(Json.Null)
 
     }
   }
 }
 
 /** Test object containing example data model for `TestApiRuntimeTyped`
+  * Note the `@JsonCodec`s are needed in the runtime version, unlike in the macro version
   * (sidenote: annotating `TestRuntimeDataModel` doesn't make `TestRuntimeDataModelComponent` visible)
   */
 object TestRuntimeDataModel extends TestRuntimeDataModelComponent{
@@ -93,6 +94,7 @@ object TestRuntimeDataModel extends TestRuntimeDataModelComponent{
 
 /**Illustrates the case where sub-components are used to partition
   * the code
+  * Note the `@JsonCodec`s are needed in the runtime version, unlike in the macro version
   */
 trait TestRuntimeDataModelComponent {
   @JsonCodec case class OtherTestRead(testRead: String)
