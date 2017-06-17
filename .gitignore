@@ -18,3 +18,5 @@
 /rest_http_client/shared/target/
 /doc/target/
 /.history
+/.ensime
+/.ensime_cache/
